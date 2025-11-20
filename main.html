@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Philosophy and Ethics Review Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for better readability and aesthetics */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fb;
+        }
+        .quiz-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        .question-card {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1.5rem;
+            border-left: 5px solid #10b981; /* Emerald border */
+        }
+        .question-card:nth-child(even) {
+            border-left-color: #3b82f6; /* Blue border for contrast */
+        }
+        .question-text {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+        .submit-button {
+            transition: background-color 0.3s, transform 0.1s;
+        }
+        .submit-button:hover {
+            transform: translateY(-2px);
+        }
+        .answer-feedback {
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 6px;
+        }
+        .correct {
+            background-color: #d1fae5; /* Green light */
+            color: #065f46; /* Green dark */
+        }
+        .incorrect {
+            background-color: #fee2e2; /* Red light */
+            color: #991b1b; /* Red dark */
+        }
+    </style>
+</head>
+<body class="p-4">
+
+<div class="quiz-container">
+    <header class="text-center mb-10">
+        <h1 class="text-4xl font-extrabold text-gray-800">Philosophy and Ethics Final Review</h1>
+        <p class="text-xl text-gray-500 mt-2">Based on the provided study notes</p>
+    </header>
+
+    <form id="quizForm" class="space-y-6">
+
+        <!-- Section 1: True or False -->
+        <section class="mb-8 p-6 bg-white rounded-xl shadow-lg border-t-8 border-emerald-500">
+            <h2 class="text-2xl font-bold text-emerald-700 mb-4">Section 1: True or False (10 Items)</h2>
+            <p class="text-gray-600 mb-6">Instructions: Read each statement carefully. Choose True or False.</p>
+
+            <div id="section1">
+                <!-- T/F Questions will be inserted here by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Section 2: Multiple Choice -->
+        <section class="mb-8 p-6 bg-white rounded-xl shadow-lg border-t-8 border-blue-500">
+            <h2 class="text-2xl font-bold text-blue-700 mb-4">Section 2: Multiple Choice (25 Items)</h2>
+            <p class="text-gray-600 mb-6">Instructions: Choose the letter that corresponds to the best answer.</p>
+
+            <div id="section2">
+                <!-- Multiple Choice Questions will be inserted here by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Section 3: Identification/Classification -->
+        <section class="mb-8 p-6 bg-white rounded-xl shadow-lg border-t-8 border-indigo-500">
+            <h2 class="text-2xl font-bold text-indigo-700 mb-4">Section 3: Identification/Classification (15 Items)</h2>
+            <p class="text-gray-600 mb-6">Instructions: Identify the moral philosophy described by the statement.</p>
+
+            <div id="section3">
+                 <!-- Identification Questions will be inserted here by JavaScript -->
+            </div>
+        </section>
+
+        <div class="text-center mt-10">
+            <button type="submit" class="submit-button px-8 py-3 bg-green-600 text-white font-semibold rounded-lg shadow-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-500 focus:ring-opacity-50">
+                Submit Quiz & View Score
+            </button>
+        </div>
+    </form>
+
+    <div id="scoreResult" class="mt-10 p-6 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 rounded-lg shadow-xl hidden">
+        <h2 class="text-3xl font-bold mb-3 text-center">Quiz Results</h2>
+        <p id="totalScore" class="text-2xl font-extrabold text-center mb-4"></p>
+        <p class="text-center text-sm italic">Review the quiz for item-by-item feedback.</p>
+    </div>
+
+</div>
+
+<script>
+    // Define the correct answers and quiz structure
+    const quizData = {
+        // Section 1: True or False (10 Items)
+        section1: [
+            { id: 1, text: 'The core activities of philosophy involve Nagdadahilan, Nangangatwiran, and Nagrarason, which collectively lead to NAG-IISIP (thinking).', answer: 'True' },
+            { id: 2, text: 'The concept of Mesotes serves as the objective component of moral virtue, dictating that one must avoid the two extremes: neither deficient nor excessive.', answer: 'True' },
+            { id: 3, text: 'Acts of Man are Voluntary actions done with full knowledge and full consent of the will.', answer: 'False' },
+            { id: 4, text: 'According to the notes on Immanuel Kant, the three Moral Bases that will help one uphold an ethical principle are Human Freedom, Immortality of the Soul, and the Existence of God.', answer: 'True' },
+            { id: 5, text: 'Ethics is defined as a practical and normative science based on faith.', answer: 'False' },
+            { id: 6, text: 'The Moral Standard deals with matters that may seriously injure or may greatly benefit human beings.', answer: 'True' },
+            { id: 7, text: 'Ethnocentrism is the view that ethical systems and cultural beliefs vary from one culture to another and that all are equal in validity and relevance.', answer: 'False' },
+            { id: 8, text: 'Aristotle classified Ethics as a science (*episteme*) concerning the nature and purpose of human action.', answer: 'False' },
+            { id: 9, text: 'In Kohlberg\'s Conventional Stage, moral standards are internalized but not questioned; reasoning is based on group norms.', answer: 'True' },
+            { id: 10, text: 'David Hume held that moral judgments are formed not by reason alone but through feelings or emotions.', answer: 'True' },
+        ],
+        // Section 2: Multiple Choice (25 Items)
+        section2: [
+            { id: 1, text: 'What is the technical definition of Philosophy?', options: ['A systematized body of knowledge concerning human experience.', 'The love of wisdom derived from the terms PHILO and SOPHIA.', 'A science of all things by their ultimate causes in the light of Divine Revelation alone.', 'A science of all things by their ultimate causes in the light of human reason alone.'], answer: 'A science of all things by their ultimate causes in the light of human reason alone.' },
+            { id: 2, text: 'Which characteristic defines a Normative Science?', options: ['A systematized body of knowledge that is applicable to human action.', 'The analysis of facts to form a judgment.', 'A systematized body of knowledge that provides guidelines, regulations or set of rules to maintain a sense of direction.', 'A systematized body of knowledge that deals with everything under the sun.'], answer: 'A systematized body of knowledge that provides guidelines, regulations or set of rules to maintain a sense of direction.' },
+            { id: 3, text: 'Ethics is the science of right living, while which other science is the science of right thinking?', options: ['Law', 'Psychology', 'Education', 'Logic'], answer: 'Logic' },
+            { id: 4, text: 'Which of the following describes the relationship between Ethics and Law?', options: ['Both deal with the external acts of a person.', 'Law deals with the external acts, while Ethics deals with the internal acts: thoughts and desires.', 'Ethics provides knowledge, while Law provides wisdom and character.', 'Both deal with earning a living.'], answer: 'Law deals with the external acts, while Ethics deals with the internal acts: thoughts and desires.' },
+            { id: 5, text: 'A person is considered full of wisdom if he knows how to apply his knowledge on a situation where there is a:', options: ['Moral standard', 'Cultural belief', 'Dilemma', 'Moral principle'], answer: 'Dilemma' },
+            { id: 6, text: 'Who claimed that man is the measure of all things, arguing that moral judgments are relative and laws are based upon convention?', options: ['Aristotle', 'Immanuel Kant', 'Epicurus', 'Protagoras of Abdera'], answer: 'Protagoras of Abdera' },
+            { id: 7, text: 'Which philosophical view is considered man-centered and holds that one particular ethnic group’s system of beliefs and values is morally superior to all others?', options: ['Cultural Relativism', 'Ethnocentrism', 'Theocentrism', 'Moral Relativism'], answer: 'Ethnocentrism' },
+            { id: 8, text: 'Which Filipino character strength is described as having a basic sense of justice and fairness and a strong sense of concern for others?', options: ['Strong sense of family orientation', 'Joy and humor', 'Pakikipagkapwa-tao', 'Hardworking and industriousness'], answer: 'Pakikipagkapwa-tao' },
+            { id: 9, text: 'What is the Greek term for the distinctive function of a human person that must be performed in accordance with the standard of excellence?', options: ['Aréte', 'Mesotes', 'Phronesis', 'Ergon'], answer: 'Ergon' },
+            { id: 10, text: 'Etymologically, character stems from the Greek karakter, which initially referred to the:', options: ['mark impressed upon a coin.', 'rational soul.', 'love of wisdom.', 'greatest good.'], answer: 'mark impressed upon a coin.' },
+            { id: 11, text: 'According to Aristotle, what is the ultimate end (Telos) of human action?', options: ['Sensual pleasure', 'Peace of mind', 'Eudaimonia', 'Virtue'], answer: 'Eudaimonia' },
+            { id: 12, text: 'What concept is the objective component of moral virtue in Aristotle\'s ethics?', options: ['Aréte', 'Phronesis', 'Mesotes', 'Ergon'], answer: 'Mesotes' },
+            { id: 13, text: 'Which of Kohlberg\'s stages is characterized by seeking to maintain expectations and win approval of one\'s immediate group, and the goal is to be seen as a loyal and caring person?', options: ['Stage 1: Obedience and Punishment Orientation', 'Stage 2: Pleasure Orientation', 'Stage 3: Peer and Group Acceptance Orientation ("Good boy")', 'Stage 4: Social Structure Orientation'], answer: 'Stage 3: Peer and Group Acceptance Orientation ("Good boy")' },
+            { id: 14, text: 'A person who is prepared to act against the rest of society to defend moral principles of conscience having logical comprehensiveness and universality is in which of Kohlberg\'s stages?', options: ['Stage 4: Social Structure Orientation', 'Stage 5: Social-Contract Orientation', 'Stage 6: Universal Ethical Principle', 'Stage 3: Peer and Group Acceptance Orientation'], answer: 'Stage 6: Universal Ethical Principle' },
+            { id: 15, text: 'Who argued that the morally right thing is to do the action that is supported by rational arguments, because feelings may be irrational?', options: ['Plato', 'David Hume', 'Thomas Nagel', 'Aristotle'], answer: 'Thomas Nagel' },
+            { id: 16, text: 'Which quality requires considering that every moral decision is equally important to the others?', options: ['Reason', 'Objectivity', 'Conscientiousness', 'Impartiality'], answer: 'Impartiality' },
+            { id: 17, text: 'Which of the 8 Steps to Moral Reasoning involves clarifying what is known and what needs to be known?', options: ['Define the ethical issues', 'Gather the facts', 'Review relevant ethical guidelines', 'List the alternative courses of action'], answer: 'Gather the facts' },
+            { id: 18, text: 'When comparing alternatives with principles, which of the following should be done?', options: ['Choose the one with the most positive consequences.', 'Eliminate alternatives that do not uphold moral value.', 'List the competing interests as "versus."', 'Obtain consultation from a competent person.'], answer: 'Eliminate alternatives that do not uphold moral value.' },
+            { id: 19, text: 'Which affirmation is associated with POSITIVE THINKING/MINDSET?', options: ['The analysis of facts, with certain levels of rigor.', 'A phenomenon whereby something new and somehow valuable is formed.', 'What the Mind Conceives, the Body Achieves.', 'The ability to analyze information objectively.'], answer: 'What the Mind Conceives, the Body Achieves.' },
+            { id: 20, text: 'The state of Eudaimonia is described as a rationally ordered life in which intellectual, physical, and social needs are all met under the governance of:', options: ['Tradition and culture.', 'Feelings and passion.', 'Reason and moderation.', 'Strict law and order.'], answer: 'Reason and moderation.' },
+            { id: 21, text: 'What did Epicurus aim to liberate humanity from?', options: ['Sensual pleasures and political affairs.', 'The fear of God and the fear of death.', 'The rigidity of ordered philosophies.', 'The necessity of cause and effect.'], answer: 'The fear of God and the fear of death.' },
+            { id: 22, text: 'In Stoicism, the universe is governed by a rational substance called the Logos, which is also considered the:', options: ['Human Reason', 'Absolute Reason or God', 'Virtue', 'Distinctive Function (Ergon)'], answer: 'Absolute Reason or God' },
+            { id: 23, text: 'Which Filipino value means entrusting one\'s fate to God, developed from their religiosity?', options: ['Pakikipagkapwa-tao', 'Aréte', 'Bahala na', 'Philo'], answer: 'Bahala na' },
+            { id: 24, text: 'The difference between Ethics and Education is that Education provides knowledge and skills, while Ethics provides:', options: ['Laws and regulations.', 'Wisdom and character.', 'Quality of service and decent living.', 'Social order and moral dilemmas.'], answer: 'Wisdom and character.' },
+            { id: 25, text: 'The practical intellect that properly decides to act, takes the appropriate means to reach the intended goal, and controls desire and passion is called:', options: ['Aréte', 'Mesotes', 'Practical wisdom (Phronesis)', 'Moral character'], answer: 'Practical wisdom (Phronesis)' },
+        ],
+        // Section 3: Identification/Classification (15 Items)
+        section3: [
+            { id: 1, text: 'An action follows this if it adheres to the philosophy asserting that **pleasure is good and pain is evil** and seeks the most possible pleasure and the least possible pain.', answer: 'Hedonism (General)' },
+            { id: 2, text: 'An act is an act of this philosophy if it aims for happiness by way of **wisdom**, adhering to the maxim "**live according to nature**", and believing **virtue is the only good**.', answer: 'Stoicism' },
+            { id: 3, text: 'This specific form of Hedonism is identifiable when the action\'s goal is a search for pleasure, prioritizing **sensual pleasures** because they are considered more intense and thus the best of all.', answer: 'Aristippus (Cyrenaic Hedonism)' },
+            { id: 4, text: 'An action is associated with this philosophy if it prioritizes achieving the greatest good, which is **peace of mind**, by regulating desires and seeking freedom from all pains and discomforts in both the body and the mind.', answer: 'Epicureanism (Egoistic Hedonism)' },
+            { id: 5, text: 'A practice aligns with this philosophy if it **revolted against the rigidly ordered philosophies**, believing happiness comes from self-discipline, rational control of all desires and appetites, and **minimal contact with conventional society**.', answer: 'Cynicism' },
+            { id: 6, text: 'This philosophy developed **cosmopolitanism**, asserting that all persons are citizens of the same human community because everyone shares **reason (Law)** and justice.', answer: 'Stoicism' },
+            { id: 7, text: 'The founder of this philosophy advised: "**Eat, drink, and be merry today for tomorrow you may die**."', answer: 'Aristippus (Cyrenaic Hedonism)' },
+            { id: 8, text: 'This philosophy views **passions and emotions** as irrational elements or vices that must be **eradicated** to maintain the tranquility of spirit.', answer: 'Stoicism' },
+            { id: 9, text: 'This philosophy is identified by the focus on **intellectual pleasures** as the highest good, rejecting the emphasis on the intensity of sensual pleasures.', answer: 'Epicureanism (Egoistic Hedonism)' },
+            { id: 10, text: 'This is the philosophy that advised followers to **limit social relationships** and avoid involvement in political affairs.', answer: 'Epicureanism (Egoistic Hedonism)' },
+            { id: 11, text: 'This philosophy focuses on controlling what has been within the human power and to **accept with dignified resignation what had to be**.', answer: 'Stoicism' },
+            { id: 12, text: 'This philosophy is based on the pursuit of happiness by prioritizing **sensual pleasures** because they are considered more **intense**.', answer: 'Aristippus (Cyrenaic Hedonism)' },
+            { id: 13, text: 'This philosophical school was influenced by Socrates\' strong character and disdain for fashion, and in turn, influenced the development of Stoicism.', answer: 'Cynicism' },
+            { id: 14, text: 'Its highest good is defined as **freedom from all pains and discomforts** in both the body and the mind.', answer: 'Epicureanism (Egoistic Hedonism)' },
+            { id: 15, text: 'This is the **general** philosophy that asserts that the ultimate standard of morality is the achievement of **pleasure** and the avoidance of **pain**.', answer: 'Hedonism (General)' },
+        ]
+    };
+
+    const philosophyOptions = ['Hedonism (General)', 'Aristippus (Cyrenaic Hedonism)', 'Epicureanism (Egoistic Hedonism)', 'Cynicism', 'Stoicism'];
+
+    // --- Rendering Functions ---
+
+    function renderTrueFalse() {
+        const container = document.getElementById('section1');
+        quizData.section1.forEach(q => {
+            const qHtml = `
+                <div class="question-card" data-question-id="${q.id}" data-section="1">
+                    <p class="question-text"><strong>${q.id}.</strong> ${q.text}</p>
+                    <div class="flex space-x-4">
+                        <label class="inline-flex items-center">
+                            <input type="radio" class="form-radio h-5 w-5 text-emerald-600" name="q1-${q.id}" value="True">
+                            <span class="ml-2 text-gray-700">True</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" class="form-radio h-5 w-5 text-emerald-600" name="q1-${q.id}" value="False">
+                            <span class="ml-2 text-gray-700">False</span>
+                        </label>
+                    </div>
+                    <div id="feedback-1-${q.id}" class="answer-feedback hidden"></div>
+                </div>
+            `;
+            container.innerHTML += qHtml;
+        });
+    }
+
+    function renderMultipleChoice() {
+        const container = document.getElementById('section2');
+        quizData.section2.forEach((q, index) => {
+            const qNum = index + 1;
+            const optionsHtml = q.options.map((option, optIndex) => {
+                const letter = String.fromCharCode(97 + optIndex).toUpperCase(); // A, B, C, D
+                return `
+                    <label class="block mb-2 cursor-pointer p-2 rounded-md hover:bg-gray-100 transition duration-150">
+                        <input type="radio" class="form-radio h-4 w-4 text-blue-600" name="q2-${qNum}" value="${option}">
+                        <span class="ml-3 text-gray-700"><strong>${letter}.</strong> ${option}</span>
+                    </label>
+                `;
+            }).join('');
+
+            const qHtml = `
+                <div class="question-card" data-question-id="${qNum}" data-section="2">
+                    <p class="question-text"><strong>${qNum}.</strong> ${q.text}</p>
+                    ${optionsHtml}
+                    <div id="feedback-2-${qNum}" class="answer-feedback hidden"></div>
+                </div>
+            `;
+            container.innerHTML += qHtml;
+        });
+    }
+
+    function renderIdentification() {
+        const container = document.getElementById('section3');
+        quizData.section3.forEach((q, index) => {
+            const qNum = index + 1;
+            const optionsHtml = philosophyOptions.map((option, optIndex) => {
+                const letter = String.fromCharCode(97 + optIndex).toUpperCase(); // A, B, C, D, E
+                return `
+                    <label class="block mb-2 cursor-pointer p-2 rounded-md hover:bg-gray-100 transition duration-150">
+                        <input type="radio" class="form-radio h-4 w-4 text-indigo-600" name="q3-${qNum}" value="${option}">
+                        <span class="ml-3 text-gray-700"><strong>${letter}.</strong> ${option}</span>
+                    </label>
+                `;
+            }).join('');
+
+            const qHtml = `
+                <div class="question-card" data-question-id="${qNum}" data-section="3">
+                    <p class="question-text"><strong>${qNum}.</strong> ${q.text}</p>
+                    ${optionsHtml}
+                    <div id="feedback-3-${qNum}" class="answer-feedback hidden"></div>
+                </div>
+            `;
+            container.innerHTML += qHtml;
+        });
+    }
+
+    // --- Grading Function ---
+
+    function gradeQuiz(event) {
+        event.preventDefault();
+        let correctAnswers = 0;
+        let totalQuestions = 0;
+
+        // Function to grade a section
+        const gradeSection = (sectionData, sectionNum) => {
+            sectionData.forEach(q => {
+                totalQuestions++;
+                const questionId = q.id;
+                const formName = `q${sectionNum}-${questionId}`;
+                const selectedAnswer = document.querySelector(`input[name="${formName}"]:checked`)?.value;
+                const feedbackEl = document.getElementById(`feedback-${sectionNum}-${questionId}`);
+
+                if (!feedbackEl) return; // Guard clause
+
+                feedbackEl.classList.remove('hidden', 'correct', 'incorrect');
+
+                if (selectedAnswer === q.answer) {
+                    correctAnswers++;
+                    feedbackEl.classList.add('correct');
+                    feedbackEl.innerHTML = '<strong>Correct!</strong>';
+                } else {
+                    feedbackEl.classList.add('incorrect');
+                    const userAnswer = selectedAnswer ? `You chose: ${selectedAnswer}.` : 'You did not answer.';
+                    feedbackEl.innerHTML = `<strong>Incorrect.</strong> The correct answer is: ${q.answer}. ${userAnswer}`;
+                }
+            });
+        };
+
+        // Grade all sections
+        gradeSection(quizData.section1, 1);
+        gradeSection(quizData.section2, 2);
+        gradeSection(quizData.section3, 3);
+
+        // Display total score
+        const scoreResultEl = document.getElementById('scoreResult');
+        const totalScoreEl = document.getElementById('totalScore');
+        const percentage = ((correctAnswers / totalQuestions) * 100).toFixed(2);
+
+        totalScoreEl.innerHTML = `You scored ${correctAnswers} out of ${totalQuestions} (${percentage}%)`;
+        scoreResultEl.classList.remove('hidden');
+
+        // Scroll to the results
+        scoreResultEl.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // --- Initialization ---
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Render the quiz sections
+        renderTrueFalse();
+        renderMultipleChoice();
+        renderIdentification();
+
+        // Attach the grading function to the form submission
+        document.getElementById('quizForm').addEventListener('submit', gradeQuiz);
+    });
+</script>
+
+</body>
+</html>
