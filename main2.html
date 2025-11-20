@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moral Agent and Philosophical Critique Review Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for better readability and aesthetics */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fb;
+        }
+        .quiz-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        .question-card {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1.5rem;
+            border-left: 5px solid #00b894; /* Vivid Green border */
+        }
+        .question-card:nth-child(even) {
+            border-left-color: #0984e3; /* Bright Blue border for contrast */
+        }
+        .question-text {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+        .submit-button {
+            transition: background-color 0.3s, transform 0.1s;
+        }
+        .submit-button:hover {
+            transform: translateY(-2px);
+        }
+        .answer-feedback {
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 6px;
+        }
+        .correct {
+            background-color: #d1fae5; /* Green light */
+            color: #065f46; /* Green dark */
+        }
+        .incorrect {
+            background-color: #fee2e2; /* Red light */
+            color: #991b1b; /* Red dark */
+        }
+    </style>
+</head>
+<body class="p-4">
+
+<div class="quiz-container">
+    <header class="text-center mb-10">
+        <h1 class="text-4xl font-extrabold text-gray-800">Moral Agent and Critique Review Quiz</h1>
+        <p class="text-xl text-gray-500 mt-2">Focus on Character, Filipino Values, and Critiques of Virtue Ethics</p>
+    </header>
+
+    <form id="quizForm" class="space-y-6">
+
+        <!-- Section 1: True or False (Moral Agent and Character) -->
+        <section class="mb-8 p-6 bg-white rounded-xl shadow-lg border-t-8 border-green-600">
+            <h2 class="text-2xl font-bold text-green-700 mb-4">Section 1: True or False (10 Items)</h2>
+            <p class="text-gray-600 mb-6">Instructions: Evaluate statements regarding the Moral Agent and Character Development.</p>
+
+            <div id="section1">
+                <!-- T/F Questions will be inserted here by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Section 2: Multiple Choice (Filipino Values and Ethics Relation) -->
+        <section class="mb-8 p-6 bg-white rounded-xl shadow-lg border-t-8 border-blue-600">
+            <h2 class="text-2xl font-bold text-blue-700 mb-4">Section 2: Multiple Choice (20 Items)</h2>
+            <p class="text-gray-600 mb-6">Instructions: Choose the best answer from the options provided.</p>
+
+            <div id="section2">
+                <!-- Multiple Choice Questions will be inserted here by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Section 3: Identification/Classification (Critique of Philosophies) -->
+        <section class="mb-8 p-6 bg-white rounded-xl shadow-lg border-t-8 border-purple-600">
+            <h2 class="text-2xl font-bold text-purple-700 mb-4">Section 3: Identification/Critique (10 Items)</h2>
+            <p class="text-gray-600 mb-6">Instructions: Identify which critique or concept is being described.</p>
+
+            <div id="section3">
+                 <!-- Identification Questions will be inserted here by JavaScript -->
+            </div>
+        </section>
+
+        <div class="text-center mt-10">
+            <button type="submit" class="submit-button px-8 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-opacity-50">
+                Submit Quiz & View Score
+            </button>
+        </div>
+    </form>
+
+    <div id="scoreResult" class="mt-10 p-6 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 rounded-lg shadow-xl hidden">
+        <h2 class="text-3xl font-bold mb-3 text-center">Quiz Results</h2>
+        <p id="totalScore" class="text-2xl font-extrabold text-center mb-4"></p>
+        <p class="text-center text-sm italic">Review the quiz for item-by-item feedback.</p>
+    </div>
+
+</div>
+
+<script>
+    // Define the correct answers and quiz structure
+    const quizData = {
+        // Section 1: True or False (10 Items)
+        section1: [
+            { id: 1, text: 'The goodness of an action can be based on the character of the moral agent who performed the act.', answer: 'True' },
+            { id: 2, text: 'Etymologically, the Greek term "charakter" referred to the emotional state of a person, not a physical mark.', answer: 'False' },
+            { id: 3, text: 'For Aristotle, an act done voluntarily, even if it becomes a habit and secondary nature, is always considered a moral action.', answer: 'False' },
+            { id: 4, text: 'Kohlberg’s theory of moral development was criticized by Gilligan for being based on an all-male sample, which emphasized justice over compassion.', answer: 'True' },
+            { id: 5, text: 'The term "ethe" (εθη) used by Aristotle is etymologically linked to the concept of "ethics" and refers to his idea of moral character.', answer: 'True' },
+            { id: 6, text: 'A "dilemma" in the context of ethics only involves a situation with two equally bad outcomes.', answer: 'False' },
+            { id: 7, text: 'The first step in the 8 Steps to Moral Reasoning is typically to "Define the ethical issues."', answer: 'True' },
+            { id: 8, text: 'In Kohlberg\'s Pre-Conventional Stage, a person\'s moral reasoning is based primarily on societal laws and expectations.', answer: 'False' },
+            { id: 9, text: 'David Hume initially believed that virtue is in conformity to reason, but later shifted focus to feelings and emotions for moral judgments.', answer: 'True' },
+            { id: 10, text: 'The objective component of moral virtue, Mesotes (Just Middle), advises that virtue should aim for the highest possible extreme (Eudaimonia).', answer: 'False' },
+        ],
+        // Section 2: Multiple Choice (20 Items)
+        section2: [
+            { id: 1, text: 'Which Filipino strength is associated with having a basic sense of justice and fairness and a strong sense of concern for others?', options: ['Bahala na', 'Strong sense of family orientation', 'Joy and humor', 'Pakikipagkapwa-tao'], answer: 'Pakikipagkapwa-tao' },
+            { id: 2, text: 'Which Filipino value is described as entrusting one\'s fate to God, believing that tragedies are part of a divine plan?', options: ['Resourcefulness', 'Bahala na', 'Pakikipagkapwa-tao', 'Hardworking and industriousness'], answer: 'Bahala na' },
+            { id: 3, text: 'The characteristic of the Filipino that allows them to "easily rise up again and cope up" after a disaster is known as:', options: ['Resilience', 'Industriousness', 'Religiosity', 'Family orientation'], answer: 'Resilience' },
+            { id: 4, text: 'Ethics provides knowledge and skills, while which other science provides wisdom and character?', options: ['Law', 'Sociology', 'Education', 'Logic'], answer: 'Education' }, // Based on the comparison of Ethics and Education
+            { id: 5, text: 'The Greek term that Aristotle translated as "excellence" and associated with a person\'s moral act is:', options: ['Mesotes', 'Eudaimonia', 'Aréte', 'Ergon'], answer: 'Aréte' },
+            { id: 6, text: 'Which step in Moral Reasoning involves obtaining consultation from a competent person if no clear decision can be made after reviewing alternatives?', options: ['List the alternative courses of action', 'Compare alternatives with principles', 'Get consultation', 'Weigh the consequences'], answer: 'Get consultation' },
+            { id: 7, text: 'In the context of the 8 Steps to Moral Reasoning, when is it necessary to consider the consequences of an action?', options: ['Only at the first step.', 'When moral principles do not yet provide a clear decision.', 'Before gathering the facts.', 'Only if the action is illegal.'], answer: 'When moral principles do not yet provide a clear decision.' },
+            { id: 8, text: 'A person\'s value is determined by their **charakter**, which initially referred to the:', options: ['The person\'s soul or essence.', 'The mark impressed upon a coin.', 'The greatest good of the person.', 'The person\'s social standing.'], answer: 'The mark impressed upon a coin.' },
+            { id: 9, text: 'The idea that "man is the measure of all things," leading to the question of universal moral principles, is attributed to:', options: ['Socrates', 'Plato', 'Protagoras', 'Aristotle'], answer: 'Protagoras' },
+            { id: 10, text: 'Which characteristic of the Filipino is driven by the desire to improve their lives and obtain a more decent life?', options: ['Religiosity', 'Strong sense of family orientation', 'Hardworking and industriousness', 'Resilience'], answer: 'Hardworking and industriousness' },
+            { id: 11, text: 'The philosophical inquiry of the ancient Sophists tried to focus their inquiry into man as a:', options: ['Cosmic substance', 'Logical thinker', 'Human person and a thinking being', 'Subject of the gods'], answer: 'Human person and a thinking being' },
+            { id: 12, text: 'The type of moral judgment that Thomas Nagel argues is superior, as feelings may be irrational, is based on:', options: ['Cultural norms', 'Strict adherence to law', 'Rational arguments', 'Divine command'], answer: 'Rational arguments' },
+            { id: 13, text: 'What is the highest moral stage in Kohlberg\'s theory, characterized by defending moral principles of conscience with logical comprehensiveness and universality?', options: ['Stage 4: Social Structure Orientation', 'Stage 5: Social-Contract Orientation', 'Stage 6: Universal Ethical Principle', 'Stage 3: Peer and Group Acceptance Orientation'], answer: 'Stage 6: Universal Ethical Principle' },
+            { id: 14, text: 'The moral decision-making quality that requires considering every moral decision as equally important to all others is:', options: ['Objectivity', 'Impartiality', 'Conscientiousness', 'Reason'], answer: 'Impartiality' },
+            { id: 15, text: 'A person who is never a victim of a crime may view the death penalty as morally unacceptable, while a victim\'s family may demand punishment. This scenario primarily illustrates how moral decisions can be affected by:', options: ['Reason alone', 'External Law', 'Feelings or emotions', 'Divine Revelation'], answer: 'Feelings or emotions' },
+            { id: 16, text: 'Which type of thinking skill is defined as "the analysis of facts, with certain levels of rigor and problem-solving abilities, to form a judgment"?', options: ['Positive Thinking', 'Critical Thinking', 'Creativity', 'Wisdom'], answer: 'Critical Thinking' },
+            { id: 17, text: 'The ultimate end (Telos) of human action in Aristotle’s Virtue Ethics is:', options: ['Sensual pleasure', 'Immortality of the Soul', 'Eudaimonia (Happiness/Flourishing)', 'Wealth and Honor'], answer: 'Eudaimonia (Happiness/Flourishing)' },
+            { id: 18, text: 'According to the notes, what is the science of right thinking?', options: ['Ethics', 'Psychology', 'Logic', 'Sociology'], answer: 'Logic' },
+            { id: 19, text: 'The difference between Ethics and Law is that Ethics deals with the internal acts (thoughts and desires), while Law deals with the:', options: ['Divine Command', 'Universal principles', 'External acts of a person', 'Social dilemma'], answer: 'External acts of a person' },
+            { id: 20, text: 'Aristotle classified Ethics as a science that concerns the nature and purpose of human action. What kind of science does the material describe Ethics as?', options: ['Theoretical science (*episteme*)', 'Practical and normative science', 'Natural science', 'Historical science'], answer: 'Practical and normative science' },
+        ],
+        // Section 3: Identification/Classification (10 Items)
+        section3: [
+            { id: 1, text: 'Critique of Virtue Ethics: This is the reason why **Wealth** cannot be considered the highest good, as it is only a means to an end (like charity).', answer: 'It is a means, not an end.' },
+            { id: 2, text: 'Critique of Virtue Ethics: The criticism that Aristotle\'s concept of goodness was based on the actions of the **elite people** in society, potentially making it incoherent in modern contexts.', answer: 'Elitist/Incoherent in modern context.' },
+            { id: 3, text: 'Critique of Epicureanism: The difficulty in following the principle of **controlling pleasure** once one starts to acquire it.', answer: 'Difficulty in controlling pleasure.' },
+            { id: 4, text: 'Critique of Stoicism: The potential negative effect that **contentment** may lead to reliance on fate, leading to **idleness** on the pretext that everything is already dictated by the Divine Director.', answer: 'Leads to idleness/reliance on fate.' },
+            { id: 5, text: 'Critique of Virtue Ethics: The concern that if doing good deeds becomes a **habit** (secondary nature), the action may be considered **involuntary** and therefore **no longer a moral action**.', answer: 'Voluntary acts become involuntary habits.' },
+            { id: 6, text: 'Critique of Epicureanism: The argument that **sacrifices** for others in social relationships are contrary to the avoidance of physical pain and thus should be avoided.', answer: 'Limitation of social relationships.' },
+            { id: 7, text: 'Critique of Virtue Ethics: The contradiction that **Eudaimonia** aims for the **highest happiness** (an extreme), which may be contrary to the principle of **Mesotes** (the avoidance of two extremes).', answer: 'Eudaimonia contradicts Mesotes.' },
+            { id: 8, text: 'Critique of Epicureanism: The view that **physical pains and troubles** may be necessary and can lead the person to a **greater glory or greater good**.', answer: 'Pains lead to greater glory/good.' },
+            { id: 9, text: 'Critique of Kohlberg: The argument that his dilemma (Heinz) was **hypothetical** and may not produce a **valid result** if respondents were in a real situation.', answer: 'Dilemma is hypothetical.' },
+            { id: 10, text: 'Critique of Stoicism: The view that accepting one\'s fate and not feeling bad about failures is a positive effect, but the negative side is the **over-reliance** on destiny.', answer: 'Positive/Negative effect of contentment.' },
+        ]
+    };
+
+    const philosophyCritiqueOptions = [
+        'It is a means, not an end.',
+        'Elitist/Incoherent in modern context.',
+        'Difficulty in controlling pleasure.',
+        'Leads to idleness/reliance on fate.',
+        'Voluntary acts become involuntary habits.',
+        'Limitation of social relationships.',
+        'Eudaimonia contradicts Mesotes.',
+        'Pains lead to greater glory/good.',
+        'Dilemma is hypothetical.',
+        'Positive/Negative effect of contentment.'
+    ];
+
+
+    // --- Rendering Functions ---
+
+    function renderTrueFalse() {
+        const container = document.getElementById('section1');
+        quizData.section1.forEach(q => {
+            const qHtml = `
+                <div class="question-card" data-question-id="${q.id}" data-section="1">
+                    <p class="question-text"><strong>${q.id}.</strong> ${q.text}</p>
+                    <div class="flex space-x-4">
+                        <label class="inline-flex items-center">
+                            <input type="radio" class="form-radio h-5 w-5 text-green-600" name="q1-${q.id}" value="True">
+                            <span class="ml-2 text-gray-700">True</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" class="form-radio h-5 w-5 text-green-600" name="q1-${q.id}" value="False">
+                            <span class="ml-2 text-gray-700">False</span>
+                        </label>
+                    </div>
+                    <div id="feedback-1-${q.id}" class="answer-feedback hidden"></div>
+                </div>
+            `;
+            container.innerHTML += qHtml;
+        });
+    }
+
+    function renderMultipleChoice() {
+        const container = document.getElementById('section2');
+        quizData.section2.forEach((q, index) => {
+            const qNum = index + 1;
+            const optionsHtml = q.options.map((option, optIndex) => {
+                const letter = String.fromCharCode(97 + optIndex).toUpperCase(); // A, B, C, D
+                return `
+                    <label class="block mb-2 cursor-pointer p-2 rounded-md hover:bg-gray-100 transition duration-150">
+                        <input type="radio" class="form-radio h-4 w-4 text-blue-600" name="q2-${qNum}" value="${option}">
+                        <span class="ml-3 text-gray-700"><strong>${letter}.</strong> ${option}</span>
+                    </label>
+                `;
+            }).join('');
+
+            const qHtml = `
+                <div class="question-card" data-question-id="${qNum}" data-section="2">
+                    <p class="question-text"><strong>${qNum}.</strong> ${q.text}</p>
+                    ${optionsHtml}
+                    <div id="feedback-2-${qNum}" class="answer-feedback hidden"></div>
+                </div>
+            `;
+            container.innerHTML += qHtml;
+        });
+    }
+
+    function renderIdentification() {
+        const container = document.getElementById('section3');
+        quizData.section3.forEach((q, index) => {
+            const qNum = index + 1;
+            // Shuffle the options array slightly to prevent answers always being in the same spot
+            const shuffledOptions = [...philosophyCritiqueOptions].sort(() => Math.random() - 0.5);
+
+            // Ensure the correct answer is present, even if it was removed during initial shuffle (which shouldn't happen here)
+            if (!shuffledOptions.includes(q.answer)) {
+                shuffledOptions.splice(Math.floor(Math.random() * philosophyCritiqueOptions.length), 0, q.answer);
+            }
+            // Limit to 5 or 6 options for cleaner display
+            const finalOptions = Array.from(new Set([q.answer, ...shuffledOptions.filter(opt => opt !== q.answer).slice(0, 4)])).sort();
+
+
+            const optionsHtml = finalOptions.map((option, optIndex) => {
+                const letter = String.fromCharCode(97 + optIndex).toUpperCase(); // A, B, C, D, E
+                return `
+                    <label class="block mb-2 cursor-pointer p-2 rounded-md hover:bg-gray-100 transition duration-150">
+                        <input type="radio" class="form-radio h-4 w-4 text-purple-600" name="q3-${qNum}" value="${option}">
+                        <span class="ml-3 text-gray-700"><strong>${letter}.</strong> ${option}</span>
+                    </label>
+                `;
+            }).join('');
+
+            const qHtml = `
+                <div class="question-card" data-question-id="${qNum}" data-section="3">
+                    <p class="question-text"><strong>${qNum}.</strong> ${q.text}</p>
+                    ${optionsHtml}
+                    <div id="feedback-3-${qNum}" class="answer-feedback hidden"></div>
+                </div>
+            `;
+            container.innerHTML += qHtml;
+        });
+    }
+
+    // --- Grading Function ---
+
+    function gradeQuiz(event) {
+        event.preventDefault();
+        let correctAnswers = 0;
+        let totalQuestions = 0;
+
+        // Function to grade a section
+        const gradeSection = (sectionData, sectionNum) => {
+            sectionData.forEach(q => {
+                totalQuestions++;
+                const questionId = q.id;
+                const formName = `q${sectionNum}-${questionId}`;
+                const selectedAnswer = document.querySelector(`input[name="${formName}"]:checked`)?.value;
+                const feedbackEl = document.getElementById(`feedback-${sectionNum}-${questionId}`);
+
+                if (!feedbackEl) return; // Guard clause
+
+                feedbackEl.classList.remove('hidden', 'correct', 'incorrect');
+
+                if (selectedAnswer === q.answer) {
+                    correctAnswers++;
+                    feedbackEl.classList.add('correct');
+                    feedbackEl.innerHTML = '<strong>Correct!</strong>';
+                } else {
+                    feedbackEl.classList.add('incorrect');
+                    const userAnswer = selectedAnswer ? `You chose: ${selectedAnswer}.` : 'You did not answer.';
+                    feedbackEl.innerHTML = `<strong>Incorrect.</strong> The correct answer is: ${q.answer}. ${userAnswer}`;
+                }
+            });
+        };
+
+        // Grade all sections
+        gradeSection(quizData.section1, 1);
+        gradeSection(quizData.section2, 2);
+        gradeSection(quizData.section3, 3);
+
+        // Display total score
+        const scoreResultEl = document.getElementById('scoreResult');
+        const totalScoreEl = document.getElementById('totalScore');
+        const percentage = ((correctAnswers / totalQuestions) * 100).toFixed(2);
+
+        totalScoreEl.innerHTML = `You scored ${correctAnswers} out of ${totalQuestions} (${percentage}%)`;
+        scoreResultEl.classList.remove('hidden');
+
+        // Scroll to the results
+        scoreResultEl.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // --- Initialization ---
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Render the quiz sections
+        renderTrueFalse();
+        renderMultipleChoice();
+        renderIdentification();
+
+        // Attach the grading function to the form submission
+        document.getElementById('quizForm').addEventListener('submit', gradeQuiz);
+    });
+</script>
+
+</body>
+</html>

@@ -98,6 +98,9 @@
             <button type="submit" class="submit-button px-8 py-3 bg-green-600 text-white font-semibold rounded-lg shadow-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-500 focus:ring-opacity-50">
                 Submit Quiz & View Score
             </button>
+            <a href="main2.html" id="nextButton" class="hidden mt-4 px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50">
+                Next
+            </a>
         </div>
     </form>
 
@@ -297,6 +300,9 @@
 
         // Scroll to the results
         scoreResultEl.scrollIntoView({ behavior: 'smooth' });
+
+        // Show the next button
+        document.getElementById('nextButton').classList.remove('hidden');
     }
 
     // --- Initialization ---
