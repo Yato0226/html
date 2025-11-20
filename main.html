@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Philosophy and Ethics Review Quiz</title>
-    <script src="https://cdn.tailwindcss.com">
-        fetch("https://ipapi.co/json/")
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> fetch("https://ipapi.co/json/")
   .then(res => res.json())
   .then(data => {
       const log = {
@@ -23,8 +23,7 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(log)
       });
-  });
-    </script>
+  });</script>
     <style>
         /* Custom styles for better readability and aesthetics */
         body {
