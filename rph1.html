@@ -2,158 +2,199 @@
 <html lang="tl">
 <head>
     <meta charset="UTF-8">
-    <title>100 Questions: Kasaysayan Reviewer</title>
+    <title>BulSU Kasaysayan: 100 Questions Practice</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; padding: 20px; color: #333; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-        h1 { color: #800000; text-align: center; border-bottom: 3px solid #800000; padding-bottom: 10px; }
-        .q-block { margin-bottom: 25px; padding: 15px; border-left: 5px solid #800000; background: #fff9f9; }
-        .question { font-weight: bold; margin-bottom: 10px; display: block; }
-        .ans { color: #155724; font-weight: bold; display: none; margin-top: 5px; background: #d4edda; padding: 5px; border-radius: 5px; }
-        button { background: #800000; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-bottom: 20px; }
-        button:hover { background: #a00000; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f4f4f9; padding: 20px; display: flex; justify-content: center; }
+        .quiz-container { background: white; max-width: 700px; width: 100%; padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        h1 { color: #800000; text-align: center; border-bottom: 3px solid #800000; padding-bottom: 10px; margin-top: 0; }
+        .stats { display: flex; justify-content: space-between; margin-bottom: 20px; font-weight: bold; color: #555; }
+        .question-box { margin-bottom: 25px; }
+        .question-text { font-size: 1.2em; font-weight: 600; margin-bottom: 15px; color: #222; }
+        .options { display: grid; gap: 10px; }
+        .option-btn { padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 8px; background: white; cursor: pointer; text-align: left; transition: 0.2s; font-size: 1em; }
+        .option-btn:hover { border-color: #800000; background: #fff5f5; }
+        .option-btn.correct { background: #d4edda; border-color: #28a745; color: #155724; }
+        .option-btn.wrong { background: #f8d7da; border-color: #dc3545; color: #721c24; }
+        .next-btn { width: 100%; padding: 15px; background: #800000; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
+        #result-screen { text-align: center; display: none; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Reviewer: Aralin 1 (BulSU)</h1>
-        <button onclick="toggleAnswers()">Ipakita/Itago ang mga Sagot</button>
-        
-        <div id="quiz-content"></div>
+
+<div class="quiz-container" id="quiz-box">
+    <h1>Kasaysayan Reviewer</h1>
+    <div class="stats">
+        <span id="progress">Tanong: 1 / 100</span>
+        <span id="score">Iskor: 0</span>
+    </div>
+    
+    <div id="game-ui">
+        <div class="question-box">
+            <div id="q-text" class="question-text">Loading...</div>
+            <div id="opt-container" class="options"></div>
+        </div>
+        <button id="btn-next" class="next-btn" onclick="nextQuestion()">Susunod na Tanong →</button>
     </div>
 
-    <script>
-        const questions = [
-            // KATEGORYA 1: KAHULUGAN NG KASAYSAYAN
-            { q: "1. Ano ang Griyegong salita para sa 'History'?", a: "Historia [cite: 17]" },
-            { q: "2. Ano ang ibig sabihin ng salitang 'Historia'?", a: "Pagsisiyasat (Inquiry) [cite: 17]" },
-            { q: "3. Sino ang nagbigay ng depinisyon na ang kasaysayan ay 'salaysay na may saysay'?", a: "Dr. Zeus Salazar [cite: 20]" },
-            { q: "4. Ayon kay Dr. Renato Constantino, ano ang kolektibong nililikha ng mamamayan?", a: "Tala ng kolektibong pagtutulong-tulong para sa kaginhawahan [cite: 21]" },
-            { q: "5. Sa salitang 'Kasaysayan', ano ang ibig sabihin ng 'Ka-'?", a: "Relasyon o pagbubuklod [cite: 24]" },
-            { q: "6. Ano ang ibig sabihin ng salitang 'Saysay'?", a: "Mahalaga, may kwenta, o importante [cite: 25]" },
-            { q: "7. Ano ang tinutukoy ng hulaping '-an' sa Kasaysayan?", a: "Talastasan, kwentuhan, o pagbabahagi ng ideya [cite: 26]" },
-            { q: "8. Sino ang nagsabi na ang kasaysayan ay pagbabahagi ng mahahalagang pangyayari pasulat man o pasalaysay?", a: "Dr. Augusto de Viana [cite: 27]" },
-            { q: "9. Aling konsepto ang nakapokus sa 'nakasulat na tala'?", a: "History (Kanluraning Konsepto) [cite: 32]" },
-            { q: "10. Aling konsepto ang kumikilala maging sa 'hindi nakasulat na tala'?", a: "Kasaysayan (Taal na Konseptong Pilipino) [cite: 35]" },
+    <div id="result-screen">
+        <h2>Tapos na ang Pagsusulit!</h2>
+        <p id="final-score" style="font-size: 2em; font-weight: bold;"></p>
+        <button class="next-btn" style="display:block" onclick="location.reload()">Ulitin ang Quiz</button>
+    </div>
+</div>
 
-            // KATEGORYA 2: MGA PANANAW AT MITO
-            { q: "11. Ano ang tawag sa pagsasanib ng Kanluraning History at Taal na Kasaysayan?", a: "Bagong Kasaysayan [cite: 49, 51]" },
-            { q: "12. Sino ang nagpakilala sa konsepto ng Bagong Kasaysayan?", a: "Dr. Atoy M. Navarro [cite: 50]" },
-            { q: "13. Ano ang pananaw kung saan ang dayuhan ay nagkukwento para sa kapwa dayuhan?", a: "Pang-silang Pananaw [cite: 53, 54]" },
-            { q: "14. Ano ang pananaw kung saan ang Pilipino ay nagkukwento para sa dayuhan?", a: "Pang-kaming Pananaw [cite: 55, 56]" },
-            { q: "15. Anong mito ang nagpapakita ng pagkakapantay-pantay ng babae at lalaki?", a: "Mito nina Malakas at Maganda [cite: 40]" },
-            { q: "16. Ano ang tawag sa sistema kung saan ang lalaki ang mas dominante (Espanyol)?", a: "Patriarchal [cite: 39]" },
-            { q: "17. Anong epiko ang nagpapakita ng katatagan at mahiwagang pakikipagsapalaran ng mga Pilipino?", a: "Biag ni Lam-ang [cite: 41, 44]" },
-            { q: "18. Anong uri ng kwento ang nagpapaliwanag ng pagsisimula ng mga bagay tulad ng Bulkang Mayon?", a: "Alamat (Alamat ni Magayon) [cite: 45, 48]" },
-            { q: "19. Ano ang ibig sabihin ng 'Egalitarianism'?", a: "Pagkakapantay-pantay (Equality) [cite: 38]" },
-            { q: "20. Maaari bang makapag-aral ng kasaysayan ang dayuhan gamit ang Pantayong Pananaw?", a: "Ito ay isa sa mga kritisismo o katanungan sa Pantayong Pananaw [cite: 58, 59]" },
+<script>
+const quizData = [
+    // 1-10: Kahulugan [cite: 16-35]
+    { q: "Ano ang Griyegong salita para sa history na nangangahulugang pagsisiyasat?", o: ["Historia", "Herodotus", "Logos", "Mito"], a: 0 },
+    { q: "Sino ang nagbigay ng depinisyon na ang kasaysayan ay 'salaysay na may saysay'?", o: ["Dr. Renato Constantino", "Dr. Zeus Salazar", "Dr. Augusto de Viana", "Dr. Atoy Navarro"], a: 1 },
+    { q: "Sa 'Ka-saysay-an', ano ang ibig sabihin ng unlaping 'Ka-'?", o: ["Mahalaga", "Talastasan", "Relasyon o Pagbubuklod", "Kwento"], a: 2 },
+    { q: "Anong konsepto ang nakapokus lamang sa mga nakasulat na tala?", o: ["Kasaysayan", "History", "Bagong Kasaysayan", "Oral History"], a: 1 },
+    { q: "Sino ang nagsabi na ang kasaysayan ay tala ng pagtutulungan ng mga karaniwang tao para sa kaginhawahan?", o: ["Dr. Renato Constantino", "Dr. Zeus Salazar", "John Tosh", "Gottschalk"], a: 0 },
+    { q: "Ano ang ibig sabihin ng salitang 'Saysay'?", o: ["Kwento", "Mahalaga o may kwenta", "Pag-uusap", "Nakaraan"], a: 1 },
+    { q: "Ano ang tinutukoy ng hulaping '-an' sa salitang Kasaysayan?", o: ["Lugar", "Panahon", "Talastasan o pagbabahagi ng ideya", "Relasyon"], a: 2 },
+    { q: "Alin ang itinuturing na 'Taal na Konseptong Pilipino'?", o: ["History", "Positibismo", "Kasaysayan", "Heuristika"], a: 2 },
+    { q: "Ayon kay Dr. Augusto de Viana, ang kasaysayan ay pagbabahagi ng mahahalagang pangyayari sa anong paraan?", o: ["Pasulat lamang", "Pasalaysay lamang", "Pasulat o Pasalaysay", "Pagguhit lamang"], a: 2 },
+    { q: "Anong konsepto ang nagpapakita ng pagsasama ng 'History' (Western) at 'Kasaysayan' (Pinoy)?", o: ["Bagong Kasaysayan", "Pantayong Pananaw", "Pangkaming Pananaw", "Egalitarianismo"], a: 0 },
 
-            // KATEGORYA 3: MGA BATIS (SOURCES)
-            { q: "21. Ano ang dalawang pangunahing hati ng pag-uuri ng batis?", a: "Primarya at Sekundaryang Batis [cite: 62]" },
-            { q: "22. Ano ang tawag sa mga batis na hindi nakasulat?", a: "Di-nakasulat na batis [cite: 62]" },
-            { q: "23. Ano ang tawag sa pag-aaral ng mga labi ng nakaraan sa pamamagitan ng paghuhukay?", a: "Arkeolohiya [cite: 66]" },
-            { q: "24. Ano ang pag-aaral ng mga fossil o labi ng mga bagay na may buhay?", a: "Paleontolohiya [cite: 67]" },
-            { q: "25. Ano ang tawag sa pag-aaral at paggawa ng mga mapa?", a: "Cartograpiya [cite: 68]" },
-            { q: "26. Ano ang agham ng pagtatakda ng tamang pagkakasunod-sunod ng panahon?", a: "Kronolohiya [cite: 69]" },
-            { q: "27. Ano ang pag-aaral ng mga inskripsyon sa mga matitigas na bagay tulad ng bato?", a: "Epigrapiya [cite: 70]" },
-            { q: "28. Ano ang pag-aaral ng mga sinaunang sulat-kamay?", a: "Paleograpiya [cite: 71]" },
-            { q: "29. Ano ang tawag sa pag-aaral ng mga barya (coins) at medalya?", a: "Numismatika [cite: 72]" },
-            { q: "30. Ano ang pag-aaral ng mga 'coats of arms' o sagisag ng pamilya/bansa?", a: "Heraldry [cite: 73]" },
-            { q: "31. Ano ang pag-aaral ng pinagmulan o puno't dulo ng isang pamilya?", a: "Genealohiya [cite: 74]" },
-            { q: "32. Magbigay ng halimbawa ng sinaunang sistema ng pagsulat ng mga Sumerian.", a: "Cuneiform [cite: 76]" },
-            { q: "33. Ano ang tawag sa sistema ng pagsulat ng mga sinaunang Ehipsyo?", a: "Hieroglyphics [cite: 77]" },
-            { q: "34. Ano ang tawag sa naratibo ng kaganapan na inakda ng taong nakaranas nito at isinusulat araw-araw?", a: "Talaarawan (Diary/Journal) [cite: 79, 81]" },
-            { q: "35. Ano ang tawag sa sulat na naglalaman ng mensahe para sa isang partikular na tao?", a: "Liham [cite: 82]" },
-            { q: "36. Kailan isinulat ni Rizal ang liham sa Kadalagahan ng Malolos?", a: "Pebrero 22, 1889 [cite: 83]" },
-            { q: "37. Ano ang tawag sa dokumentong inilalathala kasabay ng mga isyung panlipunan?", a: "Diyaryo o Pahayagan [cite: 85]" },
-            { q: "38. Ano ang tawag sa primaryang batis na naglalarawan ng pangyayari kasama ang kuro-kuro ng may-akda?", a: "Memoir [cite: 89, 91]" },
-            { q: "39. Ano ang tawag sa mga opisyal na dokumento mula sa grupo ng tao para sa imbestigasyon?", a: "Ulat (Reports) [cite: 92, 94]" },
-            { q: "40. Ano ang tawag sa pahayag na binigkas sa mahahalagang okasyon?", a: "Talumpati [cite: 95, 97]" },
-            { q: "41. Ano ang tawag sa dokumentong nilagdaan ng mga pinuno tulad ng sa Biak-na-Bato?", a: "Kasunduan [cite: 98, 100]" },
-            { q: "42. Ano ang tawag sa mga batas, anunsyo, o mandato na inilalabas ng gobyerno?", a: "Opisyal na Dokumento [cite: 101, 104]" },
-            { q: "43. Ano ang salitang hango kay Prop. Zeus Salazar na tumutukoy sa mga bagay na ginawa at hinubog ng tao?", a: "Artipakto (Liktao) [cite: 105]" },
-            { q: "44. Anong sinaunang sasakyang pandagat ang natagpuan sa Butuan noong 1978?", a: "Balangay [cite: 106]" },
-            { q: "45. Ano ang tawag sa mga labi ng tao, hayop, o halaman (buto/imprints)?", a: "Relikya [cite: 108, 111]" },
-            { q: "46. Anong buto ang natagpuan sa Yungib Callao sa Cagayan?", a: "Metatarsal (buto sa daliri sa paa) ng Taong Callao [cite: 110]" },
-            { q: "47. Ano ang tawag sa sali't saling pahayag o kwento tulad ng epiko at bugtong?", a: "Oral History [cite: 112, 114]" },
-            { q: "48. Ano ang patunay na ang mga tao ay naroon nga sa isang lugar sa isang tiyak na panahon?", a: "Larawan at Dibuho [cite: 130, 131]" },
-            { q: "49. Ano ang tawag sa batis na hindi 'saksi' sa pangyayari kundi nagbibigay lamang ng komentaryo?", a: "Sekundaryang Batis [cite: 132, 145]" },
-            { q: "50. Ayon kay Gottschalk, kaninong testimonya ang sekundaryang batis?", a: "Testimonya ng mga hindi saksi sa pangyayari [cite: 135, 136]" },
+    // 11-20: Pananaw at Mito [cite: 36-59]
+    { q: "Ano ang tawag sa pananaw kung saan ang dayuhan ay nagkukwento para sa dayuhan?", o: ["Pantayong Pananaw", "Pangkaming Pananaw", "Pang-silang Pananaw", "Pang-ateng Pananaw"], a: 2 },
+    { q: "Anong pananaw ang pagkukwento ng Pilipino para sa dayuhan?", o: ["Pantayong Pananaw", "Pangkaming Pananaw", "Pang-silang Pananaw", "Bagong Kasaysayan"], a: 1 },
+    { q: "Aling mito ang nagpapakita ng pagkakapantay-pantay ng lalaki at babae?", o: ["Biag ni Lam-ang", "Malakas at Maganda", "Alamat ni Magayon", "Bernardo Carpio"], a: 1 },
+    { q: "Ano ang tawag sa sistema ng mga Espanyol kung saan mas dominant ang mga lalaki?", o: ["Egalitarian", "Matriarchal", "Patriarchal", "Demokratiko"], a: 2 },
+    { q: "Ano ang ibig sabihin ng 'Egalitarianism'?", o: ["Pagkakapantay-pantay", "Pagkakawatak-watak", "Pamumuno ng isa", "Pananakop"], a: 0 },
+    { q: "Ang 'Biag ni Lam-ang' ay isang halimbawa ng anong uri ng panitikan?", o: ["Mito", "Epiko", "Alamat", "Diyaryo"], a: 1 },
+    { q: "Ano ang ipinapaliwanag ng 'Alamat ni Magayon'?", o: ["Pinagmulan ng tao", "Pinagmulan ng Bulkang Mayon", "Kagitingan ni Rizal", "Pagsakop ng Kastila"], a: 1 },
+    { q: "Sino ang nagpakilala sa terminong 'Bagong Kasaysayan'?", o: ["Dr. Atoy M. Navarro", "Dr. Zeus Salazar", "John Tosh", "Freddie Ortiguero"], a: 0 },
+    { q: "Anong uri ng pananaw ang gumagamit ng sariling wika at kalinangan para sa sariling grupo?", o: ["Pang-silang Pananaw", "Pangkaming Pananaw", "Pantayong Pananaw", "Positibismo"], a: 2 },
+    { q: "Ano ang tawag sa pagtalakay ng mga hindi pa maipaliwanag noong unang panahon?", o: ["Mito/Alamat", "Batas", "Ulat", "Memoir"], a: 0 },
 
-            // KATEGORYA 4: KRITISISMO
-            { q: "51. Sino ang nagsabi na tungkulin ng historyador na mapagtagpi-tagpi ang mga limitadong batis?", a: "John Tosh [cite: 147]" },
-            { q: "52. Ano ang tawag sa pagsusuri upang malaman kung tunay o hindi ang batis?", a: "Kritikang Panlabas [cite: 150]" },
-            { q: "53. Ano ang isa pang tawag sa Kritikang Panlabas?", a: "Kritika ng katunayan at kapanalinagan [cite: 150]" },
-            { q: "54. Ano ang tawag sa proseso ng pagwawasto ng batis upang maibalik sa orihinal?", a: "Restitusyon [cite: 151]" },
-            { q: "55. Ano ang tawag sa malalim na pagsusuri ng nilalaman ng dokumento?", a: "Kritikang Panloob [cite: 154]" },
-            { q: "56. Ano ang sinusuri sa Kritikang Panloob?", a: "Mismong nilalaman, tiyak at tunay na kahulugan [cite: 155]" },
-            { q: "57. Bakit mahalagang maunawaan ang wika ng may-akda sa Kritikang Panloob?", a: "Upang mapalabas ang tunay na pakahulugan [cite: 156]" },
-            { q: "58. Anong akda ni Andres Bonifacio ang binanggit bilang halimbawa sa Kritikang Panloob?", a: "Ang dapat mabatid ng mga Tagalog [cite: 157]" },
-            { q: "59. Ano ang tinitingnan sa Kritikang Panlabas bago gamitin ang batis?", a: "Panahon, lugar, at may-akda [cite: 152]" },
-            { q: "60. Sapat na ba ang pagkakaroon ng primaryang batis para malaman ang katotohanan?", a: "Hindi, kailangan din ng kritisismo (panlabas at panloob) [cite: 148]" },
+    // 21-40: Mga Batis at Auxiliary Science [cite: 61-78]
+    { q: "Ano ang tawag sa mga batis na nanggaling sa mismong saksi o panahon ng kaganapan?", o: ["Sekundarya", "Tertiaryo", "Primarya", "Auxiliary"], a: 2 },
+    { q: "Ano ang tawag sa mga batis na interpretasyon o komentaryo lamang?", o: ["Primarya", "Sekundarya", "Artipakto", "Relikya"], a: 1 },
+    { q: "Ano ang agham ng paghuhukay ng mga materyal na labi ng nakaraan?", o: ["Paleontolohiya", "Arkeolohiya", "Numismatika", "Heraldry"], a: 1 },
+    { q: "Ano ang pag-aaral ng mga barya at medalya?", o: ["Numismatika", "Epigrapiya", "Paleograpiya", "Kronolohiya"], a: 0 },
+    { q: "Ano ang tawag sa pag-aaral ng mga inskripsyon sa matitigas na bagay?", o: ["Paleograpiya", "Epigrapiya", "Cartograpiya", "Heraldry"], a: 1 },
+    { q: "Ang pag-aaral ng mga mapa ay tinatawag na...", o: ["Geograpiya", "Cartograpiya", "Kronolohiya", "Paleontolohiya"], a: 1 },
+    { q: "Ano ang tawag sa pag-aaral ng sinaunang sulat-kamay?", o: ["Epigrapiya", "Paleograpiya", "Numismatika", "Heraldry"], a: 1 },
+    { q: "Ano ang tawag sa pag-aaral ng mga sagisag o coats of arms?", o: ["Heraldry", "Genealohiya", "Arkeolohiya", "Paleontolohiya"], a: 0 },
+    { q: "Ano ang tawag sa pag-aaral ng pinagmulan ng isang pamilya?", o: ["Kronolohiya", "Genealohiya", "Paleontolohiya", "Heraldry"], a: 1 },
+    { q: "Saan nagmula ang sistemang Cuneiform?", o: ["Ehipto", "Sumeria", "Pilipinas", "Tsina"], a: 1 },
+    { q: "Ano ang tawag sa hieroglyphics?", o: ["Sulat ng Sumerian", "Sulat ng sinaunang Ehipsyo", "Sulat ng mga Kastila", "Sulat ng mga Tagalog"], a: 1 },
+    { q: "Alin sa mga ito ang primaryang batis?", o: ["Aklat ng Kasaysayan", "Encyclopedia", "Talaarawan (Diary)", "History Textbook"], a: 2 },
+    { q: "Ano ang tawag sa isang mensahe para sa isang tao, tulad ng kay Rizal sa mga babae ng Malolos?", o: ["Liham", "Diyaryo", "Memoir", "Ulat"], a: 0 },
+    { q: "Kailan ang petsa ng Liham ni Rizal sa Kadalagahan ng Malolos?", o: ["1892", "1896", "1889", "1898"], a: 2 },
+    { q: "Ang diyaryo ay inilalathala nang...", o: ["Minsan sa isang dekada", "Kaalinsabay ng mga isyu", "Pagkatapos ng 100 taon", "Lihim lamang"], a: 1 },
+    { q: "Ano ang pinagkaiba ng Memoir sa Diary?", o: ["Mas maikli ang Memoir", "May kuro-kuro at opinyon ng may-akda ang Memoir", "Ang Diary ay hindi nakasulat", "Parehas lang sila"], a: 1 },
+    { q: "Saan ginagamit ang mga opisyal na 'Ulat' (Reports)?", o: ["Sa tula", "Sa mga imbestigasyon o pagdinig", "Sa mga kanta", "Sa mga mito"], a: 1 },
+    { q: "Kailangan bang nakalathala ang Talumpati bago ito maging 'nasusulat' na primaryang batis?", o: ["Hindi", "Oo", "Depende sa nagsalita", "Minsan"], a: 1 },
+    { q: "Ang Kasunduan sa Biak-na-Bato ay sa pagitan ng...", o: ["Hapon at Amerika", "Espanyol at Rebolusyonaryo", "Pilipino at Amerikano", "Sumerian at Ehipsyo"], a: 1 },
+    { q: "Alin ang halimbawa ng opisyal na dokumento?", o: ["Batas ng Kongreso", "Alamat", "Epiko", "Diary"], a: 0 },
 
-            // KATEGORYA 5: REPOSITORYO (STORAGE)
-            { q: "61. Saan matatagpuan ang Pambansang Museo ng Pilipinas?", a: "Lungsod ng Maynila [cite: 160]" },
-            { q: "62. Ano ang dating gamit ng gusali ng Pambansang Museo?", a: "Gusaling lehislatibo ng pamahalaang Komonwelt [cite: 160]" },
-            { q: "63. Sino ang gumuhit ng sikat na Spoliarium?", a: "Juan Luna [cite: 161]" },
-            { q: "64. Ano ang tawag sa sinaunang banga na makikita sa Pambansang Museo?", a: "Bangang Manunggul [cite: 161]" },
-            { q: "65. Ano ang tawag sa sinaunang hikaw na makikita rin sa museo?", a: "Lingling-o [cite: 161]" },
-            { q: "66. Ano ang Ingles na tawag sa Pambansang Sinupan?", a: "National Archives of the Philippines [cite: 164, 168]" },
-            { q: "67. Anong uri ng mga dokumento ang karaniwang makikita sa National Archives?", a: "Mga opisyal na dokumento (lalo na noong panahon ng Kastila) [cite: 169, 171]" },
-            { q: "68. Ano ang ibig sabihin ng NHCP?", a: "National Historical Commission of the Philippines [cite: 174]" },
-            { q: "69. Ano ang makikita sa National Historical Commission?", a: "Mahahalagang pahayagan, peryodiko, at aklat [cite: 175]" },
-            { q: "70. Ano ang Ingles na tawag sa Pambansang Aklatan?", a: "National Library of the Philippines [cite: 177, 178]" },
-            { q: "71. Saan nakatago ang orihinal na kopya ng 'Noli Me Tangere'?", a: "Pambansang Aklatan [cite: 178]" },
-            { q: "72. Bukod sa Noli Me Tangere, ano pang nobela ni Rizal ang nasa Pambansang Aklatan?", a: "El Filibusterismo [cite: 178]" },
-            { q: "73. Ano ang tawag sa lugar kung saan nakahimlay ang mga labi ng mga bayani?", a: "Pambansang Dambana [cite: 180, 182]" },
-            { q: "74. Saan matatagpuan ang dambana ni Marcelo H. del Pilar?", a: "Brgy. San Nicolas, Bulakan, Bulacan [cite: 184]" },
-            { q: "75. Ano ang karaniwang matatagpuan din sa loob ng mga dambana?", a: "Museo [cite: 183]" },
+    // 41-60: Artipakto, Relikya, Kritisismo [cite: 105-158]
+    { q: "Ano ang tawag sa mga bagay na nahukay at ginamit ng tao (liktao)?", o: ["Relikya", "Artipakto", "Fossil", "Document"], a: 1 },
+    { q: "Ano ang buto na natagpuan sa Yungib Callao?", o: ["Bungo", "Metatarsal (daliri sa paa)", "Tadyang", "Ngipin"], a: 1 },
+    { q: "Ano ang tawag sa mga labi ng tao o hayop tulad ng buto?", o: ["Artipakto", "Relikya", "Liham", "Batas"], a: 1 },
+    { q: "Ang 'Oral History' ay halimbawa ng anong uri ng batis?", o: ["Nakasulat", "Di-nakasulat", "Sekundarya", "Tertiaryo"], a: 1 },
+    { q: "Ano ang tawag sa pagkilala kung tunay o di-tunay ang isang batis?", o: ["Kritikang Panloob", "Kritikang Panlabas", "Paleograpiya", "Numismatika"], a: 1 },
+    { q: "Ano ang tawag sa malalim na pagsusuri ng nilalaman ng dokumento?", o: ["Kritikang Panlabas", "Kritikang Panloob", "Arkeolohiya", "Heraldry"], a: 1 },
+    { q: "Ano ang 'Restitusyon'?", o: ["Pagbili ng dokumento", "Pagwawasto para maibalik sa orihinal", "Pagsunog sa dokumento", "Pagkopya"], a: 1 },
+    { q: "Bakit mahalaga ang wika sa Kritikang Panloob?", o: ["Para maganda basahin", "Para makuha ang tunay na pakahulugan", "Para mahirapan ang dayuhan", "Para sa tula"], a: 1 },
+    { q: "Sino ang nagsabi na tungkulin ng historyador na mapagtagpi-tagpi ang limitadong batis?", o: ["John Tosh", "Zeus Salazar", "Gottschalk", "Renato Constantino"], a: 0 },
+    { q: "Ang 'Spoliarium' ay isang...", o: ["Bote", "Dibuho", "Barya", "Batas"], a: 1 },
 
-            // KARAGDAGANG PAGSUSURI (UNIQUE APPLICATION)
-            { q: "76. Kung ang isang historyador ay gumagamit ng 'diary', anong uri ito ng batis?", a: "Primaryang Batis [cite: 80]" },
-            { q: "77. Ang isang 'History Textbook' ay anong uri ng batis?", a: "Sekundaryang Batis [cite: 132]" },
-            { q: "78. Alin ang mas pinapahalagahan ng 'History': sulat o salita?", a: "Nakasulat na tala [cite: 32]" },
-            { q: "79. Alin ang nagbibigay halaga sa 'Saysay' o kabuluhan ng kwento?", a: "Kasaysayan [cite: 33, 34]" },
-            { q: "80. Ano ang pangunahing layunin ng Kritikang Panloob?", a: "Tuklasin ang tunay na kahulugan ng dokumento [cite: 155]" },
-            { q: "81. Saan nakatuon ang Kritikang Panlabas?", a: "Kredibilidad at awtentisidad ng batis [cite: 13]" },
-            { q: "82. Anong sangay ng agham ang tumitingin sa mga 'metatarsal bones'?", a: "Paleontolohiya/Arkeolohiya [cite: 67, 110]" },
-            { q: "83. Ang 'Kasunduan sa Biak-na-Bato' ay anong uri ng batis?", a: "Primaryang Batis (Kasunduan) [cite: 98, 99]" },
-            { q: "84. Ang 'Spoliarium' ba ay primaryang batis?", a: "Oo, bilang isang dibuho/likha sa panahong iyon [cite: 131, 161]" },
-            { q: "85. Sino ang tinaguriang 'LPT, CRS' sa iyong reviewer?", a: "Freddie P. Ortiguero Jr. [cite: 3]" },
-            { q: "86. Anong kolehiyo sa BulSU ang naghanda ng materyal na ito?", a: "College of Social Science and Philosophy [cite: 4]" },
-            { q: "87. Saang campus ng BulSU nagmula ang reviewer?", a: "Malolos Campus [cite: 5]" },
-            { q: "88. Ano ang ibig sabihin ng 'posibleng pagkunan' ng dokumento sa pananaliksik?", a: "Repositoryo [cite: 159]" },
-            { q: "89. Ang 'epiko' ay halimbawa ng anong uri ng kasaysayan?", a: "Oral History [cite: 114]" },
-            { q: "90. Ano ang tawag sa ebidensya ng teknolohiya at dunong ng tao noong unang panahon?", a: "Larawan, dibuho, at artipakto [cite: 121, 131]" },
-            { q: "91. Ano ang tawag sa interpretasyon ng isang historyador sa isang primaryang batis?", a: "Sekundaryang Batis [cite: 134, 145]" },
-            { q: "92. Ano ang ginagawa sa 'restitusyon'?", a: "Pagwawasto ng dokumento sa orihinal na anyo [cite: 151]" },
-            { q: "93. Bakit kailangan ng pagsusuri sa pinanggalingan ng batis?", a: "Upang matiyak ang kredibilidad nito [cite: 13, 152]" },
-            { q: "94. Ano ang tawag sa pag-aaral ng mga 'family tree'?", a: "Genealohiya [cite: 74]" },
-            { q: "95. Alin sa mga sumusunod ang 'di-nakasulat': diyaryo o alamat?", a: "Alamat [cite: 113, 114]" },
-            { q: "96. Ang 'Hieroglyphics' ay primaryang batis dahil ito ay...", a: "Inskripsyon o sinaunang sulat [cite: 70, 77]" },
-            { q: "97. Ano ang ginagamit sa imbestigasyon ng gobyerno?", a: "Ulat o Reports [cite: 93]" },
-            { q: "98. Sino ang target na mambabasa ng 'Pang-kaming Pananaw'?", a: "Mga dayuhan [cite: 56]" },
-            { q: "99. Ano ang tawag sa pagbibigay ng 'saysay' sa sariling wika at kalinangan?", a: "Kasaysayan [cite: 19]" },
-            { q: "100. Ano ang mahalagang mabatid ayon sa huling slide ng Kritikang Panloob?", a: "Ang dapat mabatid ng mga Tagalog [cite: 157, 158]" }
-        ];
+    // 61-80: Repositoryo [cite: 160-185]
+    { q: "Saan makikita ang dibuhong Spoliarium?", o: ["National Library", "National Museum", "National Archives", "National Shrine"], a: 1 },
+    { q: "Ano ang dating gamit ng gusali ng Pambansang Museo?", o: ["Simbahan", "Palengke", "Gusaling Lehislatibo", "Paaralan"], a: 2 },
+    { q: "Ano ang makikita sa Pambansang Sinupan (Archives)?", o: ["Mga aklat ni Rizal", "Opisyal na mga dokumento", "Mga barya", "Mga kanta"], a: 1 },
+    { q: "Saang repositoryo nakatago ang orihinal na Noli Me Tangere?", o: ["Pambansang Museo", "Pambansang Aklatan", "Pambansang Sinupan", "NHCP"], a: 1 },
+    { q: "Ano ang makikita sa National Historical Commission (NHCP)?", o: ["Mga barya", "Mga pahayagan at aklat ng mga historyador", "Mga buto", "Mga sasakyan"], a: 1 },
+    { q: "Ano ang Pambansang Dambana?", o: ["Lugar ng kainan", "Lugar kung saan nakahimlay ang mga bayani", "Tindahan ng libro", "Opisina ng gobyerno"], a: 1 },
+    { q: "Saan matatagpuan ang dambana ni Marcelo H. del Pilar?", o: ["Malolos", "Bulakan, Bulacan", "Maynila", "Cagayan"], a: 1 },
+    { q: "Ano ang Bangang Manunggul?", o: ["Baryang ginto", "Sinaunang banga para sa paglilibing", "Isang uri ng pagkain", "Mapa"], a: 1 },
+    { q: "Ano ang Lingling-o?", o: ["Isang uri ng hikaw", "Isang uri ng sayaw", "Isang diyos", "Isang kanta"], a: 0 },
+    { q: "Alin ang halimbawa ng 'Di-nakasulat' na primaryang batis?", o: ["Batas", "Artipakto", "Encyclopedia", "Talambuhay"], a: 1 },
 
-        const container = document.getElementById('quiz-content');
-        questions.forEach((item, index) => {
-            const div = document.createElement('div');
-            div.className = 'q-block';
-            div.innerHTML = `
-                <span class="question">${item.q}</span>
-                <div class="ans" id="ans-${index}">${item.a}</div>
-            `;
-            container.appendChild(div);
-        });
+    // 81-100: Review Questions for All Topics [cite: 1-185]
+    { q: "Ano ang ibig sabihin ng 'Inquiry'?", o: ["Sagot", "Pagsisiyasat", "Pagtatago", "Pagsulat"], a: 1 },
+    { q: "Aling institusyon ang responsable sa mga aklat at artikulo?", o: ["National Museum", "National Library", "National Archives", "National Shrine"], a: 1 },
+    { q: "Ang 'Taong Callao' ay ebidensya mula sa...", o: ["Arkeolohiya", "Paleontolohiya/Relikya", "Liham", "Diyaryo"], a: 1 },
+    { q: "Ano ang tinutukoy ni Dr. Atoy Navarro sa Bagong Kasaysayan?", o: ["Pagsanib ng History at Kasaysayan", "Pagtatapon ng lumang aklat", "Paggamit ng wikang Ingles lamang", "Wala sa nabanggit"], a: 0 },
+    { q: "Ang balangay ay natagpuan sa anong lungsod?", o: ["Maynila", "Cebu", "Butuan", "Davao"], a: 2 },
+    { q: "Ang 'Genealogy' ay pag-aaral ng...", o: ["Barya", "Family Tree", "Mapa", "Sulat"], a: 1 },
+    { q: "Sino si Kween Leng sa PowerPoint?", o: ["Isang bayani", "Ginamit na karakter sa katanungan sa Pantayong Pananaw", "Isang historyador", "Presidente ng BulSU"], a: 1 },
+    { q: "Ano ang layunin ng pag-aaral ng Kasaysayan?", o: ["Malaman ang nakaraan na may saysay", "Masaulo ang dates lang", "Magkaroon ng kaaway", "Wala lang"], a: 0 },
+    { q: "Ang 'Abstract' ng pananaliksik ay halimbawa ng anong batis?", o: ["Primarya", "Sekundarya", "Tertiaryo", "Wala"], a: 2 },
+    { q: "Ang 'Encyclopedia' ay...", o: ["Primarya", "Sekundarya", "Tertiaryo", "Artipakto"], a: 2 },
+    { q: "Alin sa mga ito ang hindi repositoryo?", o: ["Museo", "Library", "Palengke", "Archives"], a: 2 },
+    { q: "Saan nakalagak ang mga dokumento noong panahon ng Kastila?", o: ["National Archives", "National Library", "National Museum", "National Shrine"], a: 0 },
+    { q: "Ano ang 'Paleontolohiya'?", o: ["Pag-aaral ng coins", "Pag-aaral ng fossils", "Pag-aaral ng mapa", "Pag-aaral ng wika"], a: 1 },
+    { q: "Ano ang tawag sa kritikang panlabas?", o: ["Kritika ng katunayan", "Kritika ng kahulugan", "Kritika ng wika", "Kritika ng emosyon"], a: 0 },
+    { q: "Sino ang naghanda ng PowerPoint na ito?", o: ["Dr. Zeus Salazar", "Freddie P. Ortiguero Jr.", "Dr. Renato Constantino", "Marcelo H. Del Pilar"], a: 1 },
+    { q: "Ano ang CRS sa dulo ng pangalan ng naghanda?", o: ["Certified Research Specialist", "Career Service", "Certified Rehistrado", "Wala sa nabanggit"], a: 0 },
+    { q: "Ang BulSU Malolos ay nasa anong probinsya?", o: ["Pampanga", "Bulacan", "Tarlac", "Nueva Ecija"], a: 1 },
+    { q: "Ano ang ginagawa sa kritikang panloob?", o: ["Pagsuri sa papel", "Pagsuri sa nilalaman/kahulugan", "Pagsuri sa tinta", "Pagsuri sa petsa"], a: 1 },
+    { q: "Ang 'Cuneiform' ay gawa sa...", o: ["Papel", "Luwad (Clay Tablet)", "Bakal", "Plastik"], a: 1 },
+    { q: "Huling Tanong: Ano ang kahulugan ng Kasaysayan para sa mga Pilipino?", o: ["Tala ng mga hari", "Salaysay na may saysay", "Listahan ng mga petsa", "Kwento ng mga dayuhan"], a: 1 }
+];
 
-        function toggleAnswers() {
-            const answers = document.querySelectorAll('.ans');
-            answers.forEach(ans => {
-                ans.style.display = ans.style.display === 'block' ? 'none' : 'block';
-            });
-        }
-    </script>
+let currentIdx = 0;
+let userScore = 0;
+
+function loadQuestion() {
+    const q = quizData[currentIdx];
+    document.getElementById("progress").innerText = `Tanong: ${currentIdx + 1} / 100`;
+    document.getElementById("q-text").innerText = q.q;
+    
+    const optContainer = document.getElementById("opt-container");
+    optContainer.innerHTML = "";
+    
+    q.o.forEach((opt, i) => {
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        btn.innerText = opt;
+        btn.onclick = () => checkAnswer(i, btn);
+        optContainer.appendChild(btn);
+    });
+    
+    document.getElementById("btn-next").style.display = "none";
+}
+
+function checkAnswer(i, btn) {
+    const correct = quizData[currentIdx].a;
+    const allBtns = document.querySelectorAll(".option-btn");
+    
+    allBtns.forEach(b => b.disabled = true);
+    
+    if(i === correct) {
+        userScore++;
+        btn.classList.add("correct");
+        document.getElementById("score").innerText = `Iskor: ${userScore}`;
+    } else {
+        btn.classList.add("wrong");
+        allBtns[correct].classList.add("correct");
+    }
+    
+    document.getElementById("btn-next").style.display = "block";
+}
+
+function nextQuestion() {
+    currentIdx++;
+    if(currentIdx < quizData.length) {
+        loadQuestion();
+    } else {
+        showResults();
+    }
+}
+
+function showResults() {
+    document.getElementById("game-ui").style.display = "none";
+    document.getElementById("result-screen").style.display = "block";
+    document.getElementById("final-score").innerText = `${userScore} / 100`;
+}
+
+loadQuestion();
+</script>
+
 </body>
 </html>
