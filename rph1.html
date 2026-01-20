@@ -2,199 +2,165 @@
 <html lang="tl">
 <head>
     <meta charset="UTF-8">
-    <title>BulSU Kasaysayan: 100 Questions Practice</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPH Mastery Quiz - Yato0226 (BulSU)</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f4f4f9; padding: 20px; display: flex; justify-content: center; }
-        .quiz-container { background: white; max-width: 700px; width: 100%; padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        h1 { color: #800000; text-align: center; border-bottom: 3px solid #800000; padding-bottom: 10px; margin-top: 0; }
-        .stats { display: flex; justify-content: space-between; margin-bottom: 20px; font-weight: bold; color: #555; }
-        .question-box { margin-bottom: 25px; }
-        .question-text { font-size: 1.2em; font-weight: 600; margin-bottom: 15px; color: #222; }
-        .options { display: grid; gap: 10px; }
-        .option-btn { padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 8px; background: white; cursor: pointer; text-align: left; transition: 0.2s; font-size: 1em; }
-        .option-btn:hover { border-color: #800000; background: #fff5f5; }
-        .option-btn.correct { background: #d4edda; border-color: #28a745; color: #155724; }
-        .option-btn.wrong { background: #f8d7da; border-color: #dc3545; color: #721c24; }
-        .next-btn { width: 100%; padding: 15px; background: #800000; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; display: none; }
-        #result-screen { text-align: center; display: none; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; padding: 20px; background-color: #121212; color: #e0e0e0; }
+        .container { max-width: 900px; margin: auto; background: #1e1e1e; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+        h1 { color: #bb86fc; text-align: center; border-bottom: 2px solid #bb86fc; padding-bottom: 10px; margin-bottom: 5px; }
+        .subtitle { text-align: center; color: #03dac6; margin-bottom: 20px; font-size: 0.9em; }
+        .setup-section { text-align: center; margin-bottom: 30px; position: sticky; top: 0; background: #1e1e1e; padding: 10px; z-index: 100; border-bottom: 1px solid #333; }
+        .question-card { background: #2d2d2d; padding: 20px; margin-bottom: 20px; border-radius: 8px; border-left: 5px solid #03dac6; transition: 0.3s; }
+        .question-card:hover { transform: scale(1.01); }
+        input[type="text"] { width: 90%; padding: 12px; margin-top: 10px; border-radius: 4px; border: 1px solid #444; background: #121212; color: white; font-size: 1em; }
+        button { background: #03dac6; color: #000; padding: 12px 25px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin: 5px; transition: 0.2s; }
+        button:hover { background: #018786; }
+        .feedback { margin-top: 10px; font-weight: bold; min-height: 20px; }
+        .correct { color: #4caf50; }
+        .incorrect { color: #cf6679; }
+        #score-summary { text-align: center; font-size: 1.5em; margin-top: 20px; padding: 20px; background: #333; border-radius: 8px; display: none; }
+        .btn-check-all { background: #bb86fc; width: 100%; margin-top: 20px; font-size: 1.1em; }
     </style>
 </head>
 <body>
-
-<div class="quiz-container" id="quiz-box">
-    <h1>Kasaysayan Reviewer</h1>
-    <div class="stats">
-        <span id="progress">Tanong: 1 / 100</span>
-        <span id="score">Iskor: 0</span>
-    </div>
-    
-    <div id="game-ui">
-        <div class="question-box">
-            <div id="q-text" class="question-text">Loading...</div>
-            <div id="opt-container" class="options"></div>
+    <div class="container">
+        <h1>RPH Identification Reviewer</h1>
+        <div class="subtitle">Personalized for Yato0226 | Bulacan State University</div>
+        
+        <div class="setup-section">
+            <button onclick="startQuiz()">Shuffle & Start New Quiz</button>
+            <button class="btn-check-all" onclick="showOverallScore()">Submit & Show Total Score</button>
         </div>
-        <button id="btn-next" class="next-btn" onclick="nextQuestion()">Susunod na Tanong →</button>
+
+        <div id="quiz-area"></div>
+        <div id="score-summary"></div>
     </div>
 
-    <div id="result-screen">
-        <h2>Tapos na ang Pagsusulit!</h2>
-        <p id="final-score" style="font-size: 2em; font-weight: bold;"></p>
-        <button class="next-btn" style="display:block" onclick="location.reload()">Ulitin ang Quiz</button>
-    </div>
-</div>
+    <script>
+        const quizData = [
+            { q: "Ang salitang Griyego kung saan nagmula ang 'History' na ang ibig sabihin ay 'pagsisiyasat'.", a: "Historia" },
+            { q: "Ayon sa kanya, ang kasaysayan ay salaysay na may saysay para sa sariling grupo na isinasalaysay gamit ang sariling wika.", a: "Zeus Salazar" },
+            { q: "Ang tawag sa pagsasanib ng Kanluraning 'History' (Positibismo) at taal na 'Kasaysayan' ng mga Pilipino.", a: "Bagong Kasaysayan" },
+            { q: "Siya ang nagpakilala ng konseptong 'Bagong Kasaysayan'.", a: "Atoy Navarro" },
+            { q: "Uri ng kritisismo na sumusuri sa katunayan at kapanaligan (authenticity/appearance) ng batis.", a: "Kritikang Panlabas" },
+            { q: "Uri ng kritisismo na sumusuri sa mismong nilalaman at tunay na kahulugan ng dokumento.", a: "Kritikang Panloob" },
+            { q: "Anong uri ng batis ang mga talaarawan o diary na isinulat ng mga nakasaksi sa pangyayari?", a: "Primaryang Batis" },
+            { q: "Ang auxiliary science na tumutukoy sa pag-aaral ng mga barya at pera.", a: "Numismatika" },
+            { q: "Historyador na nagsabing ang kasaysayan ay tala ng kolektibong pagtutulong-tulong ng karaniwang mamamayan.", a: "Renato Constantino" },
+            { q: "Pananaw kung saan ang mga Pilipino ay nagkukwento sa kapwa Pilipino gamit ang sariling wika.", a: "Pantayong Pananaw" },
+            { q: "Ang auxiliary science na tumutukoy sa pag-aaral ng fossils o labi ng mga bagay na may buhay.", a: "Paleontolohiya" },
+            { q: "Ang auxiliary science para sa pag-aaral at paggawa ng mga mapa.", a: "Cartograpiya" },
+            { q: "Repositoryo sa Maynila kung saan nakalagak ang Spoliarium at Bangang Manunggul.", a: "Pambansang Museo" },
+            { q: "Repositoryo na kinalalagakan ng mga opisyal na dokumento noong panahon ng Kastila.", a: "Pambansang Sinupan" },
+            { q: "Batis na hindi 'saksi' sa pangyayari ngunit nagbibigay ng interpretasyon base sa primaryang batis.", a: "Sekundaryang Batis" },
+            { q: "Isang sinaunang sasakyang pandagat na nahukay sa Butuan noong 1978.", a: "Balangay" },
+            { q: "Ang pag-aaral ng mga sinaunang sistema ng pagsulat o 'handwriting'.", a: "Paleograpiya" },
+            { q: "Ang pag-aaral ng mga 'coat of arms' o simbolo ng mga pamilya at mandirigma.", a: "Heraldry" },
+            { q: "Ang kasunduang nilagdaan noong 1897 sa pagitan ng mga rebolusyonaryo at Espanyol.", a: "Kasunduan sa Biak-na-Bato" },
+            { q: "Lugar kung saan nakahimlay ang mga labi ng mga kinikilalang bayani.", a: "Pambansang Dambana" },
+            { q: "Ang pag-aaral ng kasaysayan o 'history of family'.", a: "Genealohiya" },
+            { q: "Ang manunulat na kasama ni Magellan na nag-ulat tungkol sa ekspedisyon sa Pilipinas.", a: "Antonio Pigafetta" },
+            { q: "Ang konseptong nagpapakita ng pagkakapantay-pantay ng babae at lalaki sa pre-colonial myth.", a: "Egalitarianism" },
+            { q: "Konseptong dinala ng mga Espanyol kung saan mas makapangyarihan ang mga lalaki.", a: "Patriarchal" },
+            { q: "Pananaw: Pagkukwento ng kasaysayan ng isang dayuhan para sa kapwa dayuhan.", a: "Pang-silang Pananaw" },
+            { q: "Pananaw: Pagkukwento ng kasaysayan ng Pilipinas ng isang Pilipino para sa dayuhan.", a: "Pang-kaming Pananaw" },
+            { q: "Ayon kay Gottschalk, ang 'chronological organized' na kwento ay dapat tawaging ano?", a: "History" },
+            { q: "Ang mga labi ng Callao Man na natagpuan sa Cagayan ay halimbawa ng ano?", a: "Relikya" },
+            { q: "Uri ng primaryang batis na binubuo ng mga alamat, epiko, at kwentong bayan.", a: "Oral History" },
+            { q: "Isang primaryang batis na binibigkas sa mahahalagang okasyon (halimbawa: SONA).", a: "Talumpati" },
+            { q: "Ang pag-aaral ng kasaysayan sa pamamagitan ng paghuhukay ng mga materyal na labi o liktao.", a: "Arkeolohiya" },
+            { q: "Sino ang historyador na nagsabing hindi lamang sa aklat matatagpuan ang mga batis?", a: "Louis Gottschalk" },
+            { q: "Ang tawag ni Prop. Zeus Salazar sa mga 'artifacts' sa wikang Filipino.", a: "Liktao" },
+            { q: "Ayon kay De Viana, ano ang tinutukoy ng panlaping 'Ka-' sa salitang Kasaysayan?", a: "Relasyon" },
+            { q: "Primaryang batis na inilathala kaalinsabay ng mga isyung panlipunan na tinatalakay.", a: "Diyaryo" },
+            { q: "Naratibo ng mga kaganapan na isinusulat ng may-akda araw-araw.", a: "Talaarawan" },
+            { q: "Ang auxiliary science na tumatalakay sa tamang pagkakasunod-sunod ng oras o 'time'.", a: "Kronolohiya" },
+            { q: "Sino ang nagsabi na ang mga karaniwang tao ang sentro ng kasaysayan?", a: "Renato Constantino" },
+            { q: "Ito ang ibig sabihin ng salitang 'Saysay' ayon sa lecture.", a: "Mahalaga" },
+            { q: "Ang pag-aaral ng mga ukit o 'inscriptions' sa matitigas na bagay tulad ng bato.", a: "Epigrapiya" },
+            { q: "Dito matatagpuan ang mga orihinal na manuskrito ng Noli Me Tangere.", a: "Pambansang Aklatan" },
+            { q: "Saang bayan sa Bulacan matatagpuan ang dambana ni Marcelo H. Del Pilar?", a: "Bulakan" },
+            { q: "Anong dokumento ang isinulat ni Rizal para sa mga kadalagahan noong Peb 22, 1889?", a: "Liham" },
+            { q: "Ito ay mga testimonya ng mga hindi saksi sa pangyayari ayon kay Gottschalk.", a: "Sekundaryang Batis" },
+            { q: "Epiko ng mga Ilokano na nagpapakita ng katatagan at pakikipagsapalaran.", a: "Biag ni Lam-ang" },
+            { q: "Isang uri ng batis na ginagamit sa mga imbestigasyon at pagdinig ng pamahalaan.", a: "Mga Ulat" },
+            { q: "Ang proseso ng pagwawasto ng batis upang maibalik ito sa orihinal na anyo.", a: "Restitusyon" },
+            { q: "Sino ang propesor mula sa BulSU na nag-prepare ng lecture slides na ito?", a: "Freddie P. Ortiguero Jr." },
+            { q: "Ano ang tawag sa primaryang batis na naglalarawan ng pangyayari kasama ang kuro-kuro ng may-akda?", a: "Memoir" },
+            { q: "Ang ebidensya ng pagtitiyak na ang tao ay naroon sa lugar o naganap ang pangyayari sa pamamagitan ng teknolohiya.", a: "Larawan" },
+            { q: "Ang tawag sa pagbabahagi ng ideya o kuro-kuro sa salitang Kasaysayan ayon sa '-an'.", a: "Talastasan" }
+        ];
 
-<script>
-const quizData = [
-    // 1-10: Kahulugan [cite: 16-35]
-    { q: "Ano ang Griyegong salita para sa history na nangangahulugang pagsisiyasat?", o: ["Historia", "Herodotus", "Logos", "Mito"], a: 0 },
-    { q: "Sino ang nagbigay ng depinisyon na ang kasaysayan ay 'salaysay na may saysay'?", o: ["Dr. Renato Constantino", "Dr. Zeus Salazar", "Dr. Augusto de Viana", "Dr. Atoy Navarro"], a: 1 },
-    { q: "Sa 'Ka-saysay-an', ano ang ibig sabihin ng unlaping 'Ka-'?", o: ["Mahalaga", "Talastasan", "Relasyon o Pagbubuklod", "Kwento"], a: 2 },
-    { q: "Anong konsepto ang nakapokus lamang sa mga nakasulat na tala?", o: ["Kasaysayan", "History", "Bagong Kasaysayan", "Oral History"], a: 1 },
-    { q: "Sino ang nagsabi na ang kasaysayan ay tala ng pagtutulungan ng mga karaniwang tao para sa kaginhawahan?", o: ["Dr. Renato Constantino", "Dr. Zeus Salazar", "John Tosh", "Gottschalk"], a: 0 },
-    { q: "Ano ang ibig sabihin ng salitang 'Saysay'?", o: ["Kwento", "Mahalaga o may kwenta", "Pag-uusap", "Nakaraan"], a: 1 },
-    { q: "Ano ang tinutukoy ng hulaping '-an' sa salitang Kasaysayan?", o: ["Lugar", "Panahon", "Talastasan o pagbabahagi ng ideya", "Relasyon"], a: 2 },
-    { q: "Alin ang itinuturing na 'Taal na Konseptong Pilipino'?", o: ["History", "Positibismo", "Kasaysayan", "Heuristika"], a: 2 },
-    { q: "Ayon kay Dr. Augusto de Viana, ang kasaysayan ay pagbabahagi ng mahahalagang pangyayari sa anong paraan?", o: ["Pasulat lamang", "Pasalaysay lamang", "Pasulat o Pasalaysay", "Pagguhit lamang"], a: 2 },
-    { q: "Anong konsepto ang nagpapakita ng pagsasama ng 'History' (Western) at 'Kasaysayan' (Pinoy)?", o: ["Bagong Kasaysayan", "Pantayong Pananaw", "Pangkaming Pananaw", "Egalitarianismo"], a: 0 },
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
 
-    // 11-20: Pananaw at Mito [cite: 36-59]
-    { q: "Ano ang tawag sa pananaw kung saan ang dayuhan ay nagkukwento para sa dayuhan?", o: ["Pantayong Pananaw", "Pangkaming Pananaw", "Pang-silang Pananaw", "Pang-ateng Pananaw"], a: 2 },
-    { q: "Anong pananaw ang pagkukwento ng Pilipino para sa dayuhan?", o: ["Pantayong Pananaw", "Pangkaming Pananaw", "Pang-silang Pananaw", "Bagong Kasaysayan"], a: 1 },
-    { q: "Aling mito ang nagpapakita ng pagkakapantay-pantay ng lalaki at babae?", o: ["Biag ni Lam-ang", "Malakas at Maganda", "Alamat ni Magayon", "Bernardo Carpio"], a: 1 },
-    { q: "Ano ang tawag sa sistema ng mga Espanyol kung saan mas dominant ang mga lalaki?", o: ["Egalitarian", "Matriarchal", "Patriarchal", "Demokratiko"], a: 2 },
-    { q: "Ano ang ibig sabihin ng 'Egalitarianism'?", o: ["Pagkakapantay-pantay", "Pagkakawatak-watak", "Pamumuno ng isa", "Pananakop"], a: 0 },
-    { q: "Ang 'Biag ni Lam-ang' ay isang halimbawa ng anong uri ng panitikan?", o: ["Mito", "Epiko", "Alamat", "Diyaryo"], a: 1 },
-    { q: "Ano ang ipinapaliwanag ng 'Alamat ni Magayon'?", o: ["Pinagmulan ng tao", "Pinagmulan ng Bulkang Mayon", "Kagitingan ni Rizal", "Pagsakop ng Kastila"], a: 1 },
-    { q: "Sino ang nagpakilala sa terminong 'Bagong Kasaysayan'?", o: ["Dr. Atoy M. Navarro", "Dr. Zeus Salazar", "John Tosh", "Freddie Ortiguero"], a: 0 },
-    { q: "Anong uri ng pananaw ang gumagamit ng sariling wika at kalinangan para sa sariling grupo?", o: ["Pang-silang Pananaw", "Pangkaming Pananaw", "Pantayong Pananaw", "Positibismo"], a: 2 },
-    { q: "Ano ang tawag sa pagtalakay ng mga hindi pa maipaliwanag noong unang panahon?", o: ["Mito/Alamat", "Batas", "Ulat", "Memoir"], a: 0 },
+        function startQuiz() {
+            shuffle(quizData);
+            const quizArea = document.getElementById('quiz-area');
+            const summary = document.getElementById('score-summary');
+            quizArea.innerHTML = '';
+            summary.style.display = 'none';
 
-    // 21-40: Mga Batis at Auxiliary Science [cite: 61-78]
-    { q: "Ano ang tawag sa mga batis na nanggaling sa mismong saksi o panahon ng kaganapan?", o: ["Sekundarya", "Tertiaryo", "Primarya", "Auxiliary"], a: 2 },
-    { q: "Ano ang tawag sa mga batis na interpretasyon o komentaryo lamang?", o: ["Primarya", "Sekundarya", "Artipakto", "Relikya"], a: 1 },
-    { q: "Ano ang agham ng paghuhukay ng mga materyal na labi ng nakaraan?", o: ["Paleontolohiya", "Arkeolohiya", "Numismatika", "Heraldry"], a: 1 },
-    { q: "Ano ang pag-aaral ng mga barya at medalya?", o: ["Numismatika", "Epigrapiya", "Paleograpiya", "Kronolohiya"], a: 0 },
-    { q: "Ano ang tawag sa pag-aaral ng mga inskripsyon sa matitigas na bagay?", o: ["Paleograpiya", "Epigrapiya", "Cartograpiya", "Heraldry"], a: 1 },
-    { q: "Ang pag-aaral ng mga mapa ay tinatawag na...", o: ["Geograpiya", "Cartograpiya", "Kronolohiya", "Paleontolohiya"], a: 1 },
-    { q: "Ano ang tawag sa pag-aaral ng sinaunang sulat-kamay?", o: ["Epigrapiya", "Paleograpiya", "Numismatika", "Heraldry"], a: 1 },
-    { q: "Ano ang tawag sa pag-aaral ng mga sagisag o coats of arms?", o: ["Heraldry", "Genealohiya", "Arkeolohiya", "Paleontolohiya"], a: 0 },
-    { q: "Ano ang tawag sa pag-aaral ng pinagmulan ng isang pamilya?", o: ["Kronolohiya", "Genealohiya", "Paleontolohiya", "Heraldry"], a: 1 },
-    { q: "Saan nagmula ang sistemang Cuneiform?", o: ["Ehipto", "Sumeria", "Pilipinas", "Tsina"], a: 1 },
-    { q: "Ano ang tawag sa hieroglyphics?", o: ["Sulat ng Sumerian", "Sulat ng sinaunang Ehipsyo", "Sulat ng mga Kastila", "Sulat ng mga Tagalog"], a: 1 },
-    { q: "Alin sa mga ito ang primaryang batis?", o: ["Aklat ng Kasaysayan", "Encyclopedia", "Talaarawan (Diary)", "History Textbook"], a: 2 },
-    { q: "Ano ang tawag sa isang mensahe para sa isang tao, tulad ng kay Rizal sa mga babae ng Malolos?", o: ["Liham", "Diyaryo", "Memoir", "Ulat"], a: 0 },
-    { q: "Kailan ang petsa ng Liham ni Rizal sa Kadalagahan ng Malolos?", o: ["1892", "1896", "1889", "1898"], a: 2 },
-    { q: "Ang diyaryo ay inilalathala nang...", o: ["Minsan sa isang dekada", "Kaalinsabay ng mga isyu", "Pagkatapos ng 100 taon", "Lihim lamang"], a: 1 },
-    { q: "Ano ang pinagkaiba ng Memoir sa Diary?", o: ["Mas maikli ang Memoir", "May kuro-kuro at opinyon ng may-akda ang Memoir", "Ang Diary ay hindi nakasulat", "Parehas lang sila"], a: 1 },
-    { q: "Saan ginagamit ang mga opisyal na 'Ulat' (Reports)?", o: ["Sa tula", "Sa mga imbestigasyon o pagdinig", "Sa mga kanta", "Sa mga mito"], a: 1 },
-    { q: "Kailangan bang nakalathala ang Talumpati bago ito maging 'nasusulat' na primaryang batis?", o: ["Hindi", "Oo", "Depende sa nagsalita", "Minsan"], a: 1 },
-    { q: "Ang Kasunduan sa Biak-na-Bato ay sa pagitan ng...", o: ["Hapon at Amerika", "Espanyol at Rebolusyonaryo", "Pilipino at Amerikano", "Sumerian at Ehipsyo"], a: 1 },
-    { q: "Alin ang halimbawa ng opisyal na dokumento?", o: ["Batas ng Kongreso", "Alamat", "Epiko", "Diary"], a: 0 },
+            quizData.forEach((item, index) => {
+                quizArea.innerHTML += `
+                    <div class="question-card" id="card-${index}">
+                        <p><strong>${index + 1}. ${item.q}</strong></p>
+                        <input type="text" id="ans-${index}" placeholder="I-type ang sagot dito..." onkeypress="handleEnter(event, ${index})">
+                        <div id="feed-${index}" class="feedback"></div>
+                    </div>
+                `;
+            });
+            window.scrollTo(0, 0);
+        }
 
-    // 41-60: Artipakto, Relikya, Kritisismo [cite: 105-158]
-    { q: "Ano ang tawag sa mga bagay na nahukay at ginamit ng tao (liktao)?", o: ["Relikya", "Artipakto", "Fossil", "Document"], a: 1 },
-    { q: "Ano ang buto na natagpuan sa Yungib Callao?", o: ["Bungo", "Metatarsal (daliri sa paa)", "Tadyang", "Ngipin"], a: 1 },
-    { q: "Ano ang tawag sa mga labi ng tao o hayop tulad ng buto?", o: ["Artipakto", "Relikya", "Liham", "Batas"], a: 1 },
-    { q: "Ang 'Oral History' ay halimbawa ng anong uri ng batis?", o: ["Nakasulat", "Di-nakasulat", "Sekundarya", "Tertiaryo"], a: 1 },
-    { q: "Ano ang tawag sa pagkilala kung tunay o di-tunay ang isang batis?", o: ["Kritikang Panloob", "Kritikang Panlabas", "Paleograpiya", "Numismatika"], a: 1 },
-    { q: "Ano ang tawag sa malalim na pagsusuri ng nilalaman ng dokumento?", o: ["Kritikang Panlabas", "Kritikang Panloob", "Arkeolohiya", "Heraldry"], a: 1 },
-    { q: "Ano ang 'Restitusyon'?", o: ["Pagbili ng dokumento", "Pagwawasto para maibalik sa orihinal", "Pagsunog sa dokumento", "Pagkopya"], a: 1 },
-    { q: "Bakit mahalaga ang wika sa Kritikang Panloob?", o: ["Para maganda basahin", "Para makuha ang tunay na pakahulugan", "Para mahirapan ang dayuhan", "Para sa tula"], a: 1 },
-    { q: "Sino ang nagsabi na tungkulin ng historyador na mapagtagpi-tagpi ang limitadong batis?", o: ["John Tosh", "Zeus Salazar", "Gottschalk", "Renato Constantino"], a: 0 },
-    { q: "Ang 'Spoliarium' ay isang...", o: ["Bote", "Dibuho", "Barya", "Batas"], a: 1 },
+        function handleEnter(event, index) {
+            if (event.key === "Enter") {
+                checkIndividual(index);
+                // Move focus to next input if exists
+                const nextInput = document.getElementById(`ans-${index + 1}`);
+                if (nextInput) nextInput.focus();
+            }
+        }
 
-    // 61-80: Repositoryo [cite: 160-185]
-    { q: "Saan makikita ang dibuhong Spoliarium?", o: ["National Library", "National Museum", "National Archives", "National Shrine"], a: 1 },
-    { q: "Ano ang dating gamit ng gusali ng Pambansang Museo?", o: ["Simbahan", "Palengke", "Gusaling Lehislatibo", "Paaralan"], a: 2 },
-    { q: "Ano ang makikita sa Pambansang Sinupan (Archives)?", o: ["Mga aklat ni Rizal", "Opisyal na mga dokumento", "Mga barya", "Mga kanta"], a: 1 },
-    { q: "Saang repositoryo nakatago ang orihinal na Noli Me Tangere?", o: ["Pambansang Museo", "Pambansang Aklatan", "Pambansang Sinupan", "NHCP"], a: 1 },
-    { q: "Ano ang makikita sa National Historical Commission (NHCP)?", o: ["Mga barya", "Mga pahayagan at aklat ng mga historyador", "Mga buto", "Mga sasakyan"], a: 1 },
-    { q: "Ano ang Pambansang Dambana?", o: ["Lugar ng kainan", "Lugar kung saan nakahimlay ang mga bayani", "Tindahan ng libro", "Opisina ng gobyerno"], a: 1 },
-    { q: "Saan matatagpuan ang dambana ni Marcelo H. del Pilar?", o: ["Malolos", "Bulakan, Bulacan", "Maynila", "Cagayan"], a: 1 },
-    { q: "Ano ang Bangang Manunggul?", o: ["Baryang ginto", "Sinaunang banga para sa paglilibing", "Isang uri ng pagkain", "Mapa"], a: 1 },
-    { q: "Ano ang Lingling-o?", o: ["Isang uri ng hikaw", "Isang uri ng sayaw", "Isang diyos", "Isang kanta"], a: 0 },
-    { q: "Alin ang halimbawa ng 'Di-nakasulat' na primaryang batis?", o: ["Batas", "Artipakto", "Encyclopedia", "Talambuhay"], a: 1 },
+        function checkIndividual(index) {
+            const userAns = document.getElementById(`ans-${index}`).value.trim().toLowerCase();
+            const correctAns = quizData[index].a.toLowerCase();
+            const feedback = document.getElementById(`feed-${index}`);
 
-    // 81-100: Review Questions for All Topics [cite: 1-185]
-    { q: "Ano ang ibig sabihin ng 'Inquiry'?", o: ["Sagot", "Pagsisiyasat", "Pagtatago", "Pagsulat"], a: 1 },
-    { q: "Aling institusyon ang responsable sa mga aklat at artikulo?", o: ["National Museum", "National Library", "National Archives", "National Shrine"], a: 1 },
-    { q: "Ang 'Taong Callao' ay ebidensya mula sa...", o: ["Arkeolohiya", "Paleontolohiya/Relikya", "Liham", "Diyaryo"], a: 1 },
-    { q: "Ano ang tinutukoy ni Dr. Atoy Navarro sa Bagong Kasaysayan?", o: ["Pagsanib ng History at Kasaysayan", "Pagtatapon ng lumang aklat", "Paggamit ng wikang Ingles lamang", "Wala sa nabanggit"], a: 0 },
-    { q: "Ang balangay ay natagpuan sa anong lungsod?", o: ["Maynila", "Cebu", "Butuan", "Davao"], a: 2 },
-    { q: "Ang 'Genealogy' ay pag-aaral ng...", o: ["Barya", "Family Tree", "Mapa", "Sulat"], a: 1 },
-    { q: "Sino si Kween Leng sa PowerPoint?", o: ["Isang bayani", "Ginamit na karakter sa katanungan sa Pantayong Pananaw", "Isang historyador", "Presidente ng BulSU"], a: 1 },
-    { q: "Ano ang layunin ng pag-aaral ng Kasaysayan?", o: ["Malaman ang nakaraan na may saysay", "Masaulo ang dates lang", "Magkaroon ng kaaway", "Wala lang"], a: 0 },
-    { q: "Ang 'Abstract' ng pananaliksik ay halimbawa ng anong batis?", o: ["Primarya", "Sekundarya", "Tertiaryo", "Wala"], a: 2 },
-    { q: "Ang 'Encyclopedia' ay...", o: ["Primarya", "Sekundarya", "Tertiaryo", "Artipakto"], a: 2 },
-    { q: "Alin sa mga ito ang hindi repositoryo?", o: ["Museo", "Library", "Palengke", "Archives"], a: 2 },
-    { q: "Saan nakalagak ang mga dokumento noong panahon ng Kastila?", o: ["National Archives", "National Library", "National Museum", "National Shrine"], a: 0 },
-    { q: "Ano ang 'Paleontolohiya'?", o: ["Pag-aaral ng coins", "Pag-aaral ng fossils", "Pag-aaral ng mapa", "Pag-aaral ng wika"], a: 1 },
-    { q: "Ano ang tawag sa kritikang panlabas?", o: ["Kritika ng katunayan", "Kritika ng kahulugan", "Kritika ng wika", "Kritika ng emosyon"], a: 0 },
-    { q: "Sino ang naghanda ng PowerPoint na ito?", o: ["Dr. Zeus Salazar", "Freddie P. Ortiguero Jr.", "Dr. Renato Constantino", "Marcelo H. Del Pilar"], a: 1 },
-    { q: "Ano ang CRS sa dulo ng pangalan ng naghanda?", o: ["Certified Research Specialist", "Career Service", "Certified Rehistrado", "Wala sa nabanggit"], a: 0 },
-    { q: "Ang BulSU Malolos ay nasa anong probinsya?", o: ["Pampanga", "Bulacan", "Tarlac", "Nueva Ecija"], a: 1 },
-    { q: "Ano ang ginagawa sa kritikang panloob?", o: ["Pagsuri sa papel", "Pagsuri sa nilalaman/kahulugan", "Pagsuri sa tinta", "Pagsuri sa petsa"], a: 1 },
-    { q: "Ang 'Cuneiform' ay gawa sa...", o: ["Papel", "Luwad (Clay Tablet)", "Bakal", "Plastik"], a: 1 },
-    { q: "Huling Tanong: Ano ang kahulugan ng Kasaysayan para sa mga Pilipino?", o: ["Tala ng mga hari", "Salaysay na may saysay", "Listahan ng mga petsa", "Kwento ng mga dayuhan"], a: 1 }
-];
+            if (userAns === "") return; // Don't check empty
 
-let currentIdx = 0;
-let userScore = 0;
+            if (userAns === correctAns) {
+                feedback.innerHTML = "✓ TAMA [cite: 18-81]";
+                feedback.className = "feedback correct";
+            } else {
+                feedback.innerHTML = `✗ MALI. Sagot: ${quizData[index].a} [cite: 18-81]`;
+                feedback.className = "feedback incorrect";
+            }
+        }
 
-function loadQuestion() {
-    const q = quizData[currentIdx];
-    document.getElementById("progress").innerText = `Tanong: ${currentIdx + 1} / 100`;
-    document.getElementById("q-text").innerText = q.q;
-    
-    const optContainer = document.getElementById("opt-container");
-    optContainer.innerHTML = "";
-    
-    q.o.forEach((opt, i) => {
-        const btn = document.createElement("button");
-        btn.className = "option-btn";
-        btn.innerText = opt;
-        btn.onclick = () => checkAnswer(i, btn);
-        optContainer.appendChild(btn);
-    });
-    
-    document.getElementById("btn-next").style.display = "none";
-}
+        function showOverallScore() {
+            let score = 0;
+            quizData.forEach((item, index) => {
+                const userAns = document.getElementById(`ans-${index}`).value.trim().toLowerCase();
+                if (userAns === item.a.toLowerCase()) {
+                    score++;
+                }
+                checkIndividual(index);
+            });
 
-function checkAnswer(i, btn) {
-    const correct = quizData[currentIdx].a;
-    const allBtns = document.querySelectorAll(".option-btn");
-    
-    allBtns.forEach(b => b.disabled = true);
-    
-    if(i === correct) {
-        userScore++;
-        btn.classList.add("correct");
-        document.getElementById("score").innerText = `Iskor: ${userScore}`;
-    } else {
-        btn.classList.add("wrong");
-        allBtns[correct].classList.add("correct");
-    }
-    
-    document.getElementById("btn-next").style.display = "block";
-}
+            const summary = document.getElementById('score-summary');
+            const percentage = Math.round((score / quizData.length) * 100);
+            summary.innerHTML = `Kabuuan: ${score} / ${quizData.length} (${percentage}%)`;
+            summary.style.display = 'block';
+            summary.scrollIntoView();
+        }
 
-function nextQuestion() {
-    currentIdx++;
-    if(currentIdx < quizData.length) {
-        loadQuestion();
-    } else {
-        showResults();
-    }
-}
-
-function showResults() {
-    document.getElementById("game-ui").style.display = "none";
-    document.getElementById("result-screen").style.display = "block";
-    document.getElementById("final-score").innerText = `${userScore} / 100`;
-}
-
-loadQuestion();
-</script>
-
+        // Initialize quiz on load
+        window.onload = startQuiz;
+    </script>
 </body>
 </html>
