@@ -1,6 +1,9 @@
-name: Weekly Pages Build + HTML Index
+name: Pages Build + HTML Index
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
   schedule:
     - cron: '0 2 * * 0'
@@ -19,8 +22,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
@@ -29,21 +31,14 @@ jobs:
         run: |
           find . -name "*.html" \
             -not -path "./.github/*" \
-            -not -name "index.html" \
             | sed 's|^\./||' \
             | sort \
             | jq -R . | jq -s . > html-files.json
 
-          echo "Generated html-files.json:"
-          cat html-files.json
+      - uses: actions/configure-pages@v4
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
-      - name: Upload site files
-        uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v3
         with:
           path: .
 
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v4
+      - uses: actions/deploy-pages@v4
