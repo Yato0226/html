@@ -6,6 +6,7 @@
     <title>RPH Reviewer (Fixed)</title>
     <style>
         :root {
+            /* RPH Blue Theme */
             --primary: #2c3e50;
             --accent: #3498db;
             --success: #27ae60;
@@ -190,8 +191,9 @@
 
         <!-- Start Screen -->
         <div id="startScreen" class="screen active start-screen">
-            <h2>Ready to review?</h2>
-            <p>I cleaned the choices. They are now just the terms/names.</p>
+            <h2>Readings in Philippine History</h2>
+            <p>100+ items covering Historiography, Magellan, and Plasencia.</p>
+            <p><b>Fixed:</b> Choices no longer reveal the answer.</p>
             <button class="btn" onclick="startQuiz()">Start Quiz</button>
         </div>
 
@@ -230,7 +232,7 @@
 
 <script>
 // --- CLEANED DATA SOURCE ---
-// Separation: a = The Term (Choice), q = The Question, info = The Context (shown after)
+// a = The Term (Choice), q = The Question, info = The Context (shown after)
 const rawData = [
     { category: "Historiography", a: "Historia", q: "What is the Greek word for History which means inquiry or investigation?", info: "It means inquiry or investigation." },
     { category: "Historiography", a: "History", q: "How does Aristotle define this field according to Louis Gottschalk?", info: "A systematic account of a set of natural phenomena, whether or not chronological ordering was a factor." },
@@ -507,9 +509,9 @@ function endQuiz() {
     progressFill.style.width = '100%';
 
     if (percentage === 100) finalMessage.innerText = "Perfect! You're a history master!";
-    else if (percentage >= 80) finalMessage.innerText = "Excellent work!";
-    else if (percentage >= 60) finalMessage.innerText = "Good job! Keep reviewing.";
-    else finalMessage.innerText = "Keep practicing!";
+    else if (percentage >= 80) finalMessage.innerText = "Excellent work! You really know your stuff.";
+    else if (percentage >= 60) finalMessage.innerText = "Good job! A little more review and you'll ace it.";
+    else finalMessage.innerText = "Keep practicing! Review the cards again.";
 }
 </script>
 
