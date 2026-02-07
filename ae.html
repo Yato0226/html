@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic English Interactive Quiz</title>
+    <style>
+        :root {
+            /* Academic Theme: Midnight Blue & Gold */
+            --primary: #1a237e; /* Deep Blue */
+            --accent: #ffb300;  /* Amber/Gold */
+            --success: #2e7d32;
+            --error: #c62828;
+            --bg: #eceff1;
+            --text: #263238;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 20px;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Header */
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: 25px;
+            text-align: center;
+            position: relative;
+            border-bottom: 5px solid var(--accent);
+        }
+        .header h1 { margin: 0; font-size: 1.6rem; letter-spacing: 1px; }
+        .category-badge {
+            background: rgba(255,255,255,0.15);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            display: inline-block;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        /* Screens */
+        .screen { display: none; padding: 30px; flex: 1; }
+        .screen.active { display: flex; flex-direction: column; }
+
+        /* Start Screen */
+        .start-screen { text-align: center; justify-content: center; align-items: center; gap: 25px; }
+        .start-screen h2 { color: var(--primary); }
+        
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .btn:hover { 
+            transform: translateY(-2px); 
+            background: #283593; 
+            box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+        }
+
+        /* Quiz Screen */
+        .progress-bar {
+            height: 8px;
+            background: #cfd8dc;
+            width: 100%;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            font-weight: 700;
+            color: #546e7a;
+            font-size: 0.95rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .question-text {
+            font-size: 1.35rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+            line-height: 1.5;
+            color: var(--primary);
+        }
+        .options-grid {
+            display: grid;
+            gap: 15px;
+        }
+        .option-btn {
+            background: white;
+            border: 2px solid #cfd8dc;
+            padding: 18px;
+            border-radius: 8px;
+            text-align: left;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+            color: var(--text);
+            position: relative;
+        }
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--primary);
+            background: #e8eaf6;
+        }
+        .option-btn.correct {
+            background-color: #e8f5e9;
+            border-color: var(--success);
+            color: #1b5e20;
+        }
+        .option-btn.wrong {
+            background-color: #ffebee;
+            border-color: var(--error);
+            color: #b71c1c;
+        }
+        .option-btn:disabled {
+            cursor: default;
+            opacity: 0.8;
+        }
+
+        /* Result Screen */
+        .result-screen { text-align: center; justify-content: center; align-items: center; }
+        .score-circle {
+            width: 160px;
+            height: 160px;
+            background: white;
+            border: 8px solid var(--accent);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--primary);
+            font-size: 3rem;
+            font-weight: 800;
+            margin: 20px auto;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .message { margin-bottom: 30px; font-size: 1.3rem; color: #455a64; }
+
+        @media (max-width: 600px) {
+            .container { border-radius: 0; height: 100vh; }
+            .question-text { font-size: 1.15rem; }
+            .option-btn { padding: 14px; font-size: 0.95rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>Structure of Academic English</h1>
+            <span id="categoryBadge" class="category-badge" style="display:none">General</span>
+        </div>
+
+        <div class="progress-bar">
+            <div id="progressFill" class="progress-fill"></div>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="startScreen" class="screen active start-screen">
+            <h2>Ready to Master Academic English?</h2>
+            <p>Topics: Conjunctions/Prepositions, Verb Tenses (General & Mechatronics), and Academic Style.</p>
+            <button class="btn" onclick="startQuiz()">Start Assessment</button>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quizScreen" class="screen">
+            <div class="stats">
+                <span id="questionCount">Question 1/10</span>
+                <span id="scoreDisplay">Score: 0</span>
+            </div>
+            <div id="questionText" class="question-text">
+                Question goes here?
+            </div>
+            <div id="optionsGrid" class="options-grid">
+                <!-- Options injected by JS -->
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="resultScreen" class="screen result-screen">
+            <h2>Assessment Complete</h2>
+            <div class="score-circle">
+                <span id="finalScore">0%</span>
+            </div>
+            <p id="finalMessage" class="message">Great job!</p>
+            <button class="btn" onclick="startQuiz()">Retake Quiz</button>
+        </div>
+    </div>
+
+<script>
+// --- ACADEMIC ENGLISH DATA SOURCE ---
+const rawData = [
+    // --- CONJUNCTIONS & PREPOSITIONS ---
+    { category: "Grammar Basics", q: "What is the function of Conjunctions?", a: "Connect words, phrases, or clauses in a sentence." },
+    { category: "Grammar Basics", q: "Which type of conjunction connects equal sentence parts (e.g., and, but, or)?", a: "Coordinating Conjunctions" },
+    { category: "Grammar Basics", q: "Which type of conjunction connects dependent and independent clauses (e.g., because, although)?", a: "Subordinating Conjunctions" },
+    { category: "Grammar Basics", q: "What do Prepositions show in a sentence?", a: "Relationships between a noun/pronoun and another word." },
+    { category: "Grammar Basics", q: "Which type of preposition indicates how something happens (e.g., by, with, like)?", a: "Manner Prepositions" },
+    
+    // --- ACADEMIC STYLE & STRUCTURE ---
+    { category: "Academic Style", q: "What is the definition of Academic English?", a: "A formal style of communication used in academic settings." },
+    { category: "Academic Style", q: "Which of the following is a key feature of Academic English?", a: "Precision, clarity, and evidence-based arguments." },
+    { category: "Academic Style", q: "In academic writing, what should be avoided regarding vocabulary?", a: "Informal expressions, slang, and emotive language." },
+    { category: "Academic Style", q: "What is the 'Academic Word List' (AWL)?", a: "A list of 570 word families frequently appearing in academic texts." },
+    { category: "Academic Style", q: "How is 'Academic Style' characterized regarding tone?", a: "Impersonal and Cautious (hedging)." },
+    { category: "Academic Style", q: "What are the four stages of the writing process mentioned?", a: "Planning, Drafting, Revising, Editing." },
+    { category: "Academic Style", q: "What is Plagiarism?", a: "Presenting others' work or ideas as your own without proper referencing." },
+    { category: "Academic Style", q: "Which citation style uses numbered square brackets [1]?", a: "IEEE Style" },
+    { category: "Academic Style", q: "Which citation style focuses on Author-Date format and paraphrasing?", a: "APA Style" },
+
+    // --- VERB TENSES (GENERAL) ---
+    { category: "Verb Tenses", q: "What does the Simple Present tense describe?", a: "Habits, facts, scheduled events, and general truths." },
+    { category: "Verb Tenses", q: "Which tense describes actions happening continuously right now?", a: "Present Continuous" },
+    { category: "Verb Tenses", q: "Which tense connects past actions with current relevance (e.g., 'They have visited Paris')?", a: "Present Perfect" },
+    { category: "Verb Tenses", q: "What defines the Simple Past tense?", a: "Actions completed at a specific past time." },
+    { category: "Verb Tenses", q: "What is the Zero Conditional used for?", a: "General truths and facts (If this happens, that happens)." },
+    { category: "Verb Tenses", q: "What is the First Conditional used for?", a: "Real, possible future events." },
+
+    // --- MECHATRONICS CONTEXT ---
+    { category: "Mechatronics English", q: "In Mechatronics, what tense is used to state definitions and laws?", a: "Simple Present (Universal Truths)" },
+    { category: "Mechatronics English", q: "Which tense is essential for reporting experimental results in a lab report?", a: "Simple Past" },
+    { category: "Mechatronics English", q: "Why is the Future Tense used in Mechatronics?", a: "For predictive maintenance strategies and project proposals." },
+    { category: "Mechatronics English", q: "When should 'Active Voice' be used in technical writing?", a: "When the subject performs the action (direct and concise)." },
+    { category: "Mechatronics English", q: "When should 'Passive Voice' be used in technical writing?", a: "To maintain objectivity or when the actor is unknown/unimportant." },
+    { category: "Mechatronics English", q: "What defines 'Mechatronics'?", a: "A field combining mechanical elements with electronics and computing." },
+    { category: "Mechatronics English", q: "Why is avoiding ambiguity critical in engineering?", a: "Ambiguity hinders clear communication and can lead to liability." },
+    { category: "Mechatronics English", q: "What does 'PdM' stand for in future engineering contexts?", a: "Predictive Maintenance" }
+];
+
+// --- APP STATE ---
+let quizPool = [];
+let currentQuestionIndex = 0;
+let score = 0;
+let isAnswered = false;
+
+// --- DOM ELEMENTS ---
+const startScreen = document.getElementById('startScreen');
+const quizScreen = document.getElementById('quizScreen');
+const resultScreen = document.getElementById('resultScreen');
+
+const questionText = document.getElementById('questionText');
+const optionsGrid = document.getElementById('optionsGrid');
+const questionCount = document.getElementById('questionCount');
+const scoreDisplay = document.getElementById('scoreDisplay');
+const categoryBadge = document.getElementById('categoryBadge');
+const progressFill = document.getElementById('progressFill');
+const finalScore = document.getElementById('finalScore');
+const finalMessage = document.getElementById('finalMessage');
+
+// --- UTILITIES ---
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+// Get 3 wrong answers
+function getDistractors(correctItem) {
+    // Try to find distractors from the same category first
+    let sameCategory = rawData.filter(item => 
+        item.category === correctItem.category && item.a !== correctItem.a
+    );
+    
+    // Fallback to different categories
+    let differentCategory = rawData.filter(item => 
+        item.category !== correctItem.category
+    );
+
+    let distractors = [];
+
+    // Prioritize same category
+    shuffleArray(sameCategory);
+    distractors.push(...sameCategory.slice(0, 3));
+
+    // Fill with others if not enough
+    if (distractors.length < 3) {
+        shuffleArray(differentCategory);
+        distractors.push(...differentCategory.slice(0, 3 - distractors.length));
+    }
+    
+    return distractors.slice(0, 3).map(d => d.a);
+}
+
+// --- GAME LOGIC ---
+
+function startQuiz() {
+    quizPool = shuffleArray([...rawData]); // Shuffle all
+    currentQuestionIndex = 0;
+    score = 0;
+    isAnswered = false;
+
+    startScreen.classList.remove('active');
+    resultScreen.classList.remove('active');
+    quizScreen.classList.add('active');
+    
+    showQuestion();
+}
+
+function showQuestion() {
+    if (currentQuestionIndex >= quizPool.length) {
+        endQuiz();
+        return;
+    }
+
+    const item = quizPool[currentQuestionIndex];
+    isAnswered = false;
+
+    // UI Updates
+    questionCount.innerText = `Question ${currentQuestionIndex + 1} / ${quizPool.length}`;
+    scoreDisplay.innerText = `Score: ${score}`;
+    categoryBadge.innerText = item.category;
+    categoryBadge.style.display = 'inline-block';
+    
+    const progressPercent = ((currentQuestionIndex) / quizPool.length) * 100;
+    progressFill.style.width = `${progressPercent}%`;
+
+    questionText.innerText = item.q;
+
+    // Options
+    const distractors = getDistractors(item);
+    const options = [item.a, ...distractors];
+    shuffleArray(options);
+
+    optionsGrid.innerHTML = '';
+    options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerText = opt;
+        btn.onclick = () => handleAnswer(btn, opt, item.a);
+        optionsGrid.appendChild(btn);
+    });
+}
+
+function handleAnswer(selectedBtn, selectedAnswer, correctAnswer) {
+    if (isAnswered) return;
+    isAnswered = true;
+
+    const buttons = optionsGrid.querySelectorAll('.option-btn');
+
+    if (selectedAnswer === correctAnswer) {
+        score++;
+        selectedBtn.classList.add('correct');
+    } else {
+        selectedBtn.classList.add('wrong');
+        // Highlight correct one
+        buttons.forEach(btn => {
+            if (btn.innerText === correctAnswer) {
+                btn.classList.add('correct');
+            }
+        });
+    }
+
+    buttons.forEach(btn => btn.disabled = true);
+
+    setTimeout(() => {
+        currentQuestionIndex++;
+        showQuestion();
+    }, 1500);
+}
+
+function endQuiz() {
+    quizScreen.classList.remove('active');
+    resultScreen.classList.add('active');
+
+    const percentage = Math.round((score / quizPool.length) * 100);
+    finalScore.innerText = `${percentage}%`;
+    progressFill.style.width = '100%';
+
+    if (percentage === 100) {
+        finalMessage.innerText = "Outstanding! You are ready for academic publishing!";
+    } else if (percentage >= 80) {
+        finalMessage.innerText = "Excellent work! Your grasp of academic English is strong.";
+    } else if (percentage >= 60) {
+        finalMessage.innerText = "Good job! Review the tenses and styles a bit more.";
+    } else {
+        finalMessage.innerText = "Keep practicing! Precision is key in academic writing.";
+    }
+}
+</script>
+
+</body>
+</html>
