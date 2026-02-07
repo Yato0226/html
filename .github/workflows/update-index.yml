@@ -1,4 +1,4 @@
-name: Pages Build + HTML Index
+name: Pages Double Deploy + HTML Index
 
 on:
   push:
@@ -18,7 +18,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  double-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -28,6 +28,17 @@ jobs:
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
 
+      # --- First deploy: just deploy existing HTML files ---
+      - name: First Deploy - Upload Pages Artifact
+        uses: actions/configure-pages@v4
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .  # uploads all HTML files as-is
+
+      - uses: actions/deploy-pages@v4
+
+      # --- Generate/update html-files.json ---
       - name: Generate html-files.json
         run: |
           echo "Generating html-files.json..."
@@ -38,13 +49,11 @@ jobs:
           echo "Generated JSON:"
           cat html-files.json
 
-      - name: Configure Pages
-        uses: actions/configure-pages@v4
-
-      - name: Upload Pages artifact
+      # --- Second deploy: include updated JSON ---
+      - name: Second Deploy - Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .   # includes all HTML files + html-files.json
+          path: .   # now includes html-files.json
 
-      - name: Deploy to GitHub Pages
+      - name: Deploy Pages with updated JSON
         uses: actions/deploy-pages@v4
