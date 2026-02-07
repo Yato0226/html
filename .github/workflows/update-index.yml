@@ -1,74 +1,49 @@
-name: Update HTML Files Index
+name: Weekly Pages Build + HTML Index
 
 on:
-  push:
-    paths:
-      - '**/*.html'
   workflow_dispatch:
   schedule:
-    # Run every Sunday at 2 AM UTC to keep the site active
     - cron: '0 2 * * 0'
 
-# Required for GitHub Pages deployment
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
 jobs:
-  update-index:
+  deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      
-    - name: Find all HTML files
-      id: find-files
-      run: |
-        # Find all HTML files recursively and format as JSON array
-        html_files=$(find . -name "*.html" -not -path "./.github/*" | sed 's|^\./||' | sort)
-        
-        # Convert to JSON format
-        json_array=$(echo "$html_files" | jq -R . | jq -s .)
-        
-        # Save to file
-        echo "$json_array" > html-files.json
-        
-        # Output for debugging
-        echo "Found HTML files:"
-        echo "$html_files"
-        echo "JSON array:"
-        echo "$json_array"
-        
-        # Set output for potential use in other steps
-        echo "files_count=$(echo "$html_files" | wc -l)" >> $GITHUB_OUTPUT
-      
-    - name: Setup Pages
-      uses: actions/configure-pages@v4
-      
-    - name: Upload artifact
-      uses: actions/upload-pages-artifact@v3
-      with:
-        path: '.'
-        
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v4
-      
-    - name: Commit and push changes
-      if: steps.find-files.outputs.files_count > 0
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        
-        # Add the updated json file
-        git add html-files.json
-        
-        # Check if there are changes to commit
-        if git diff --staged --quiet; then
-          echo "No changes to commit"
-        else
-          git commit -m "Auto-update HTML files index [skip ci]"
-          git push
-        fi
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Generate html-files.json
+        run: |
+          find . -name "*.html" \
+            -not -path "./.github/*" \
+            -not -name "index.html" \
+            | sed 's|^\./||' \
+            | sort \
+            | jq -R . | jq -s . > html-files.json
+
+          echo "Generated html-files.json:"
+          cat html-files.json
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload site files
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
