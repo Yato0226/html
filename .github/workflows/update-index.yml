@@ -6,7 +6,7 @@ on:
       - main
   workflow_dispatch:
   schedule:
-    - cron: '0 2 * * 0'
+    - cron: '0 2 * * 0' # weekly rebuild
 
 permissions:
   contents: read
@@ -22,25 +22,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
 
       - name: Generate html-files.json
         run: |
+          echo "Generating html-files.json..."
           find . -name "*.html" -not -path "./.github/*" \
-          | sed 's|^\./||' \
-          | sort \
-          | jq -R . | jq -s . > html-files.json
-
-          echo "Generated:"
+            | sed 's|^\./||' \
+            | sort \
+            | jq -R . | jq -s . > html-files.json
+          echo "Generated JSON:"
           cat html-files.json
 
-      - uses: actions/configure-pages@v4
+      - name: Configure Pages
+        uses: actions/configure-pages@v4
 
-      - uses: actions/upload-pages-artifact@v3
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: .   # includes all HTML files + html-files.json
 
-      - uses: actions/deploy-pages@v4
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
