@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RPH Interactive Quiz</title>
+    <title>RPH Reviewer (Fixed)</title>
     <style>
         :root {
             --primary: #2c3e50;
@@ -67,6 +67,7 @@
             border-radius: 8px;
             cursor: pointer;
             transition: transform 0.2s, background 0.2s;
+            margin-top: 10px;
         }
         .btn:hover { transform: translateY(-2px); background: #2980b9; }
 
@@ -98,6 +99,7 @@
         }
         .options-grid {
             display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 12px;
         }
         .option-btn {
@@ -105,11 +107,15 @@
             border: 2px solid #e0e0e0;
             padding: 15px;
             border-radius: 8px;
-            text-align: left;
+            text-align: center;
             cursor: pointer;
             font-size: 1rem;
             transition: all 0.2s;
             color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 60px;
         }
         .option-btn:hover:not(:disabled) {
             border-color: var(--accent);
@@ -129,6 +135,19 @@
             cursor: default;
             opacity: 0.7;
         }
+
+        /* Feedback Section */
+        .feedback-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: #eef2f5;
+            border-left: 5px solid var(--accent);
+            border-radius: 4px;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .feedback-box.show { display: block; }
+        .feedback-title { font-weight: bold; display: block; margin-bottom: 5px; color: var(--primary); }
 
         /* Result Screen */
         .result-screen { text-align: center; justify-content: center; align-items: center; }
@@ -151,15 +170,17 @@
         @media (max-width: 600px) {
             .container { border-radius: 0; height: 100vh; }
             .question-text { font-size: 1.1rem; }
-            .option-btn { padding: 12px; font-size: 0.9rem; }
+            .options-grid { grid-template-columns: 1fr; }
+            .option-btn { padding: 12px; font-size: 0.9rem; min-height: 50px; }
         }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
     <div class="container">
         <div class="header">
-            <h1>RPH Comprehensive Reviewer</h1>
+            <h1>RPH Reviewer</h1>
             <span id="categoryBadge" class="category-badge" style="display:none">General</span>
         </div>
 
@@ -170,7 +191,7 @@
         <!-- Start Screen -->
         <div id="startScreen" class="screen active start-screen">
             <h2>Ready to review?</h2>
-            <p>100+ items covering Historiography, Magellan, and Plasencia.</p>
+            <p>I cleaned the choices. They are now just the terms/names.</p>
             <button class="btn" onclick="startQuiz()">Start Quiz</button>
         </div>
 
@@ -186,6 +207,14 @@
             <div id="optionsGrid" class="options-grid">
                 <!-- Options injected by JS -->
             </div>
+            
+            <!-- Explanation/Feedback Area -->
+            <div id="feedbackBox" class="feedback-box">
+                <span class="feedback-title">Did you know?</span>
+                <span id="feedbackText"></span>
+                <br>
+                <button class="btn" id="nextBtn" style="width:100%; padding: 10px; margin-top:10px;" onclick="nextQuestion()">Next Question</button>
+            </div>
         </div>
 
         <!-- Result Screen -->
@@ -200,117 +229,118 @@
     </div>
 
 <script>
-// --- DATA SOURCE ---
+// --- CLEANED DATA SOURCE ---
+// Separation: a = The Term (Choice), q = The Question, info = The Context (shown after)
 const rawData = [
-    { category: "Historiography", q: "What is the Greek word for History which means inquiry or investigation?", a: "Historia : Ang salitang Griyego na nangangahulugang pag-uusisa at pagsisiyasat." },
-    { category: "Historiography", q: "How does Aristotle define History according to Louis Gottschalk?", a: "History : Isang maayos na pagtatala gamit ang mga pangyayari o penomenon maging ito man ay sunodsunod o hindi." },
-    { category: "Historiography", q: "Who stated 'A generation which ignores history has no past - and no future'?", a: "Robert Heinlein : A generation which ignores history has no past - and no future." },
-    { category: "Historiography", q: "What is the Filipino definition of Kasaysayan?", a: "Kasaysayan : Salaysay ukol sa nakaraan na may saysay para sa sariling grupo na isinasalaysay gamit ang sariling wika." },
-    { category: "Historiography", q: "What does the root word 'Saysay' mean?", a: "Saysay : Mahalaga, may kwenta, importante." },
-    { category: "Historiography", q: "What does the prefix 'Ka-' in Kasaysayan refer to?", a: "Ka- : Tumutukoy sa relasyon o pagbubuklod." },
-    { category: "Historiography", q: "What does the suffix '-an' in Kasaysayan refer to?", a: "-an : Nagkakaroon ng talastasan, kwentuhan, pagbabahagi ng mga ideya." },
-    { category: "Historiography", q: "Who is the proponent of 'Bagong Kasaysayan'?", a: "Dr. Atoy M. Navarro : Ang nagbigay kahulugan sa Bagong Kasaysayan bilang pagsasanib ng Kanluraning Konsepto ng History at taal na kasaysayan." },
-    { category: "Historiography", q: "What is 'Pang-silang Pananaw'?", a: "Pang-silang Pananaw : Pagkukwento ng kasaysayan ng Pilipinas ng isang dayuhan para sa kapakinabangan ng kapwa dayuhan." },
-    { category: "Historiography", q: "What is 'Pang-kaming Pananaw'?", a: "Pang-kaming Pananaw : Pagkukwento ng kasaysayan ng Pilipinas ng isang Pilipino para sa kapakinabangan ng dayuhan." },
-    { category: "Historiography", q: "What is 'Pantayong Pananaw'?", a: "Pantayong Pananaw : Ang pagkukwento ng Pilipino sa isang Pilipino." },
-    { category: "Historiography", q: "What is 'Bisa ng Kasaysayan'?", a: "Bisa ng Kasaysayan : Pagkakakilanlan sa identidad ng isang bayan, pag-usbong ng pagmamahal sa bayan, at magagamit na giya sa mga pagdedesisyon." },
-    { category: "Sources", q: "What are 'Primaryang Batis' (Primary Sources)?", a: "Primaryang Batis : Karaniwang mga tao o maaari ring mga bagay na mismong naging saksi habang nagaganap ang isang mahalagang pangyayari." },
-    { category: "Sources", q: "What senses are used in 'Primaryang Batis (Pandama)'?", a: "Pandama : Sila ay malapit sa mga pangyayari at nagagamitan ng pandama—maaaring kanilang nakikita, nadarama, naririnig, naaaamoy ang mga pangyayari." },
-    { category: "Sources", q: "What are 'Sekundaryang Batis'?", a: "Sekundaryang Batis : Testimonya ng mga hindi saksi sa pangyayari subalit nagbabanggit ng mga bagay na may kaugnayan dito." },
-    { category: "Sources", q: "What is 'Talaarawan'?", a: "Talaarawan : Naratibo ng mga kaganapan na inakda ng mga tao na mismong nakaranas at nakasaksi sa mga pangyayari (Diary/Journal)." },
-    { category: "Sources", q: "What is a 'Memoir'?", a: "Memoir : Naglalarawan ng mga pangyayari habang bumabanggit ng kanyang sariling kuro-kuro ang may-akda." },
-    { category: "Sources", q: "What are 'Artipakto' or 'Liktao'?", a: "Artipakto (Liktao) : Mga bagay na nahukay ng mga arkeologo mula pa sa unang panahon na ginamit at hinubog ng tao ayon sa kanilang kultura." },
-    { category: "Sources", q: "What are 'Relikya'?", a: "Relikya : Mga labi ng mga bagay na may buhay gaya ng tao, hayop, halaman at iba pa (e.g., Metatarsal of Callao Man)." },
-    { category: "Sources", q: "What is 'Oral History'?", a: "Oral History : Sali’t saling pahayag, kwento, o salaysay na maaaring tiyak o hindi tiyak ang pinagmulan gaya ng alamat, epiko." },
-    { category: "Sources", q: "What is 'Kritikang Panlabas'?", a: "Kritikang Panlabas : Kritika ng katunayan at kapanalinagan na may kinalaman sa pagkilala kung tunay o di-tunay ang batis." },
-    { category: "Sources", q: "What is 'Kritikang Panloob'?", a: "Kritikang Panloob : Malalim na pagsusuri ng dokumento upang tuklasin ang tiyak at tunay na kahulugan ng mismong nilalaman ng akda." },
-    { category: "Repositories", q: "Where is the Spoliarium by Juan Luna located?", a: "Pambansang Museo ng Pilipinas : Matatagpuan sa Lungsod ng Maynila." },
-    { category: "Repositories", q: "Where are the original copies of Noli Me Tangere and El Filibusterismo kept?", a: "Pambansang Aklatan (National Library) : Tahanan ng mga mahahalagang aklat, dokumento, artikulo, pahayagan at peryodiko." },
-    { category: "Repositories", q: "Where are official government documents from the Spanish era kept?", a: "Pambansang Sinupan (National Archives) : Nakalagak dito ang mga opisyal na dokumento gaya ng mga dokumento noong panahon ng Kastila." },
-    { category: "Magellan Expedition", q: "Who led the Armada de Molucca?", a: "Ferdinand Magellan : Captain-general of the expedition." },
-    { category: "Magellan Expedition", q: "What date did the expedition officially start?", a: "September 20, 1519 : Official start of the voyage into the Atlantic." },
-    { category: "Magellan Expedition", q: "What defines 'Mercantilism'?", a: "Mercantilism : The economic system driving the accumulation of gold and silver." },
-    { category: "Magellan Expedition", q: "What are the 3Gs?", a: "3Gs : God, Gold, and Glory; the primary motivations for the expedition." },
-    { category: "Magellan Expedition", q: "What is the 'Papal Bull' related to the expedition?", a: "Papal Bull : The Inter Caetera Line issued by Pope Alexander VI to divide the world between Spain and Portugal." },
-    { category: "Magellan Expedition", q: "Who was the chronicler of the voyage?", a: "Antonio Pigafetta : The expert chronicler (Sobresalientes)." },
-    { category: "Magellan Expedition", q: "When did Magellan arrive at the Island of Ladrones (Guam)?", a: "March 6, 1521 : Arrival at the Island of Ladrones (Guam), where the crew was robbed." },
-    { category: "Magellan Expedition", q: "When did Magellan arrive at Homonhon (Zamal/Samar)?", a: "March 16, 1521 : Arrival at Homonhon (Zamal/Samar)." },
-    { category: "Magellan Expedition", q: "When and where was the First Mass held?", a: "March 31, 1521 : The First Mass was held; arrival in Mazaua (Limasawa)." },
-    { category: "Magellan Expedition", q: "When did the fleet arrive in Cebu (Zubu)?", a: "April 7, 1521 : Arrival in Cebu (Zubu)." },
-    { category: "Magellan Expedition", q: "When was the large-scale baptism in Cebu?", a: "April 14, 1521 : Large-scale baptism of Raja Humabon and 800 natives." },
-    { category: "Magellan Expedition", q: "Who was the Chief of Mactan who defeated Magellan?", a: "Cilapulapu (Lapu-lapu) : Chief of Mactan who defeated Magellan." },
-    { category: "Magellan Expedition", q: "When was the Battle of Mactan?", a: "April 27, 1521 : Battle of Mactan; Magellan is killed." },
-    { category: "Magellan Expedition", q: "Who was the King of Cebu baptized as Don Carlo?", a: "Raja Humabon : King of Cebu; baptized as Don Carlo." },
-    { category: "Magellan Expedition", q: "Who was the King of Mazaua?", a: "Raia Colambu : King of Mazaua; participated in the first Sandugo." },
-    { category: "Magellan Expedition", q: "Who was the slave/interpreter of Magellan?", a: "Enrique of Malacca : Magellan’s slave and interpreter (Original name: Macalla)." },
-    { category: "Magellan Expedition", q: "Which ship successfully completed the circumnavigation?", a: "Victoria : The only ship that successfully returned to Spain to complete the circumnavigation." },
-    { category: "Magellan Expedition", q: "Who commanded the Victoria back to Spain?", a: "Juan Sebastian Elcano : Completed the voyage on the Victoria." },
-    { category: "Magellan Expedition", q: "When did the Victoria return to Spain?", a: "September 6, 1522 : The ship Victoria returns to Spain under Juan Sebastian Elcano." },
-    { category: "Magellan Expedition", q: "What was the 'Sandugo'?", a: "Sandugo : The blood compact performed with local kings like Raia Colambu and Raja Humabon." },
-    { category: "Magellan Expedition", q: "What was the image gifted to the Queen of Cebu?", a: "Image of the Child Jesus : Gifted to the Queen (Johanna) after baptism." },
-    { category: "Magellan Expedition", q: "What was the 'Strait of Magellan' originally connecting?", a: "Strait of Magellan : Passage linking Chile and Argentina (explored Oct 21, 1520)." },
-    { category: "Magellan Expedition", q: "Who was Magellan's rival?", a: "Vasco da Gama : Magellan’s rival in exploration." },
-    { category: "Magellan Expedition", q: "Who funded Magellan's circumnavigation?", a: "King Charles I : Funded the expedition." },
-    { category: "Magellan Expedition", q: "Who was Zula?", a: "Zula : A chief of Mactan who sought Spanish help against Lapu-Lapu." },
-    { category: "Tagalog Customs", q: "Who is the author of 'Relacion de las Costumbres de los Tagalos'?", a: "Fray Juan de Plasencia : A Spanish friar belonging to the Franciscan Order." },
-    { category: "Tagalog Customs", q: "What is the 'Reduccion' policy?", a: "Reduccion : The policy of gathering scattered barangays into a centralized settlement (Pueblo)." },
-    { category: "Tagalog Customs", q: "What was the first book printed in the Philippines?", a: "Doctrina Christiana (1593) : The first book ever printed in the Philippines." },
-    { category: "Tagalog Customs", q: "What is a 'Dato'?", a: "Dato : The chief of the Barangay; governs 30-100 families." },
-    { category: "Tagalog Customs", q: "What is a 'Barangay'?", a: "Barangay : Derived from 'Balangay' (boat); the basic political unit." },
-    { category: "Tagalog Customs", q: "Who are the 'Maharlika'?", a: "Maharlika (Nobles) : Free-born; do not pay taxes/tribute; accompany Dato in war." },
-    { category: "Tagalog Customs", q: "Who are the 'Timawa'?", a: "Timawa (Freemen) : Commoners or freed slaves; play a role as comrades/bodyguards." },
-    { category: "Tagalog Customs", q: "Who are 'Aliping Namamahay'?", a: "Aliping Namamahay : Commoners/Householders who live in their own houses and own property." },
-    { category: "Tagalog Customs", q: "Who are 'Aliping Sa Guiguilir'?", a: "Aliping Sa Guiguilir : Hearth slaves who serve the master in his house and can be sold." },
-    { category: "Tagalog Customs", q: "What happens if a Maharlika marries an Aliping Sanguiguilid?", a: "Social Demotion : They lose their rank and their wealth is distributed." },
-    { category: "Tagalog Customs", q: "Explain the Odd-Even Rule of inheritance.", a: "Odd-Even Rule : 1st, 3rd, 5th child follow the Father's status; 2nd, 4th, 6th follow the Mother's." },
-    { category: "Tagalog Customs", q: "Who is 'Bathala'?", a: "Bathala : The Supreme Being/God; 'maker of all things'." },
-    { category: "Tagalog Customs", q: "Who is 'Tala'?", a: "Tala : The morning star/deity of stars." },
-    { category: "Tagalog Customs", q: "Who is 'Dian Masalanta'?", a: "Dian Masalanta : Patron of lovers and generation." },
-    { category: "Tagalog Customs", q: "Who are 'Lacapati and Idianale'?", a: "Lacapati and Idianale : Patrons of cultivated lands and husbandry (agriculture)." },
-    { category: "Tagalog Customs", q: "What is 'Maca'?", a: "Maca : The pre-colonial version of Paradise/Heaven." },
-    { category: "Tagalog Customs", q: "What is 'Casanaan'?", a: "Casanaan : The pre-colonial version of Hell; place of punishment." },
-    { category: "Tagalog Customs", q: "Who is 'Sitan'?", a: "Sitan : The guardian/demon of Casanaan." },
-    { category: "Tagalog Customs", q: "What is a 'Catolonan'?", a: "Catolonan : The highest priest/priestess (honorable rank)." },
-    { category: "Tagalog Customs", q: "What does a 'Mangagauay' do?", a: "Mangagauay : Witches who pretend to heal but induce sickness." },
-    { category: "Tagalog Customs", q: "What does a 'Manyisalat' do?", a: "Manyisalat : Priests who cast remedies to lovers to make them hate each other." },
-    { category: "Tagalog Customs", q: "What is a 'Mancocolam'?", a: "Mancocolam : Witch who emits fire from himself at night." },
-    { category: "Tagalog Customs", q: "What is a 'Hocloban'?", a: "Hocloban : More powerful than Mangagauay; can kill by raising a hand/wand." },
-    { category: "Tagalog Customs", q: "What is a 'Silangan'?", a: "Silangan : Witch who eats the liver of the victim (associated with Catanduanes)." },
-    { category: "Tagalog Customs", q: "What is a 'Magtatangal'?", a: "Magtatangal : Creates visions of a headless man; head separates from body." },
-    { category: "Tagalog Customs", q: "What is an 'Osuang'?", a: "Osuang : Sorcerer seen flying; eats flesh." },
-    { category: "Tagalog Customs", q: "What is a 'Mangagayoma'?", a: "Mangagayoma : Specialized in charms and love potions." },
-    { category: "Tagalog Customs", q: "What is a 'Sonat'?", a: "Sonat : 'Preacher' who predicts the salvation/condemnation of the soul." },
-    { category: "Tagalog Customs", q: "What is a 'Pangatahoan'?", a: "Pangatahoan : Soothsayer or fortune teller." },
-    { category: "Tagalog Customs", q: "What is a 'Bayoguin'?", a: "Bayoguin : Cotquean; a man whose nature inclined toward that of a woman." },
-    { category: "Tagalog Customs", q: "What is 'Bigay-kaya'?", a: "Bigay-kaya (Dowry) : Gift from the groom to the bride’s parents." },
-    { category: "Tagalog Customs", q: "What is 'Paninilbihan'?", a: "Paninilbihan : Groom’s service to the bride’s family." },
-    { category: "Tagalog Customs", q: "What is the 'Pandot'?", a: "Pandot : A ritual or festival of worship celebrated in the large house of a chief." },
-    { category: "Tagalog Customs", q: "What is 'Sibi'?", a: "Sibi : A temporary roof/shed constructed for the Pandot." },
-    { category: "Tagalog Customs", q: "What is 'Mapolo'?", a: "Mapolo : The Pleiades star cluster (signals planting season)." },
-    { category: "Tagalog Customs", q: "What is 'Balatic'?", a: "Balatic : The Greater Bear/Orion constellation." },
-    { category: "Tagalog Customs", q: "What is the symbolism of the 'Buaya' (Crocodile)?", a: "Buaya : Respected and feared; offered food to prevent harm." },
-    { category: "Tagalog Customs", q: "What is 'Frailocracia'?", a: "Frailocracia : Rule of the friars; government where friars held political power." },
-    { category: "Tagalog Customs", q: "Who coined the term 'Frailocracia'?", a: "Marcelo H. del Pilar : Coined the term in 'La Soberania Monacal en Filipinas'." },
-    { category: "Tagalog Customs", q: "What is 'Bajo de las Campanas'?", a: "Bajo de las Campanas : 'Under the bells'; living within hearing distance of church bells." },
-    { category: "Tagalog Customs", q: "What is 'Kaingin'?", a: "Kaingin : Slash and burn agriculture." },
-    { category: "Tagalog Customs", q: "What is the 'Umaholokan'?", a: "Umaholokan : The town crier who announces laws." },
-    { category: "Tagalog Customs", q: "What signifies a 'Putong'?", a: "Putong : Headgear; red color signifies the wearer has killed someone." },
-    { category: "Tagalog Customs", q: "Who are the 'Pintados'?", a: "Pintados : Tattooed people of the Visayas (tattoos act as war records)." },
-    { category: "Tagalog Customs", q: "What is 'Lic-ha'?", a: "Lic-ha : Images or idols representing spirits/anitos." },
-    { category: "Misc", q: "Who gave the name 'Las Islas Filipinas'?", a: "Ruy López de Villalobos (1543) : Originally named Leyte/Samar; extended by Legazpi." },
-    { category: "Misc", q: "What is the acronym AFJDBR referring to?", a: "Religious Orders : Augustinians, Franciscans, Jesuits, Dominicans, Benedictines, Recollects." },
-    { category: "Misc", q: "What is the 'Plaza Complex'?", a: "Plaza Complex : Layout of a town with Church, Government, School, and Market around a central Plaza." },
-    { category: "Misc", q: "What is 'Animismo'?", a: "Animismo : Belief that natural objects possess spirits." },
-    { category: "Misc", q: "What is 'Paganismo'?", a: "Paganismo : Missionary term for non-Christian worship." },
-    { category: "Misc", q: "What is 'Trial by Ordeal'?", a: "Trial by Ordeal : Judicial process involving dangerous tests (boiling water) where gods protect the innocent." },
-    { category: "Misc", q: "What is 'Biag ni Lam-ang'?", a: "Biag ni Lam-ang : Epic showing Filipino resilience and magical adventures." },
-    { category: "Misc", q: "What is the 'Mito nina Malakas at Maganda'?", a: "Mito nina Malakas at Maganda : Creation myth showing gender equality (Egalitarianism)." },
-    { category: "Misc", q: "Who is Zeus Salazar?", a: "Zeus Salazar : Proponent of Pantayong Pananaw and author regarding 'Liktao'." },
-    { category: "Misc", q: "What is 'Paleography'?", a: "Paleography : Auxiliary science studying ancient writing systems." },
-    { category: "Misc", q: "What is 'Numismatics'?", a: "Numismatics : Auxiliary science studying coins/currency." },
-    { category: "Misc", q: "What is 'Cartography'?", a: "Cartography : Study and creation of maps." },
-    { category: "Misc", q: "What is 'Restitusyon' in historical criticism?", a: "Restitusyon : Correction of a source to restore it to its original form." },
-    { category: "Misc", q: "What does 'Indio' mean in the Spanish context?", a: "Indio : Derogatory term for natives, implying lower status." }
+    { category: "Historiography", a: "Historia", q: "What is the Greek word for History which means inquiry or investigation?", info: "It means inquiry or investigation." },
+    { category: "Historiography", a: "History", q: "How does Aristotle define this field according to Louis Gottschalk?", info: "A systematic account of a set of natural phenomena, whether or not chronological ordering was a factor." },
+    { category: "Historiography", a: "Robert Heinlein", q: "Who stated 'A generation which ignores history has no past - and no future'?", info: "A famous sci-fi author who emphasized the importance of knowing the past." },
+    { category: "Historiography", a: "Kasaysayan", q: "What is the Filipino definition of History?", info: "Salaysay ukol sa nakaraan na may saysay para sa sariling grupo na isinasalaysay gamit ang sariling wika." },
+    { category: "Historiography", a: "Saysay", q: "What is the root word of 'Kasaysayan' that means 'importance'?", info: "Meaning: Mahalaga, may kwenta, importante." },
+    { category: "Historiography", a: "Ka-", q: "Which prefix in 'Kasaysayan' refers to relationship or bonding?", info: "Tumutukoy sa relasyon o pagbubuklod." },
+    { category: "Historiography", a: "-an", q: "Which suffix in 'Kasaysayan' refers to having a discourse or sharing of ideas?", info: "Nagkakaroon ng talastasan, kwentuhan, pagbabahagi ng mga ideya." },
+    { category: "Historiography", a: "Dr. Atoy M. Navarro", q: "Who is the proponent of 'Bagong Kasaysayan'?", info: "He defined Bagong Kasaysayan as the fusion of Western concepts of History and native Kasaysayan." },
+    { category: "Historiography", a: "Pang-silang Pananaw", q: "What perspective is used when a foreigner tells Philippine history for other foreigners?", info: "Clue: 'Sila' talking to 'Sila'." },
+    { category: "Historiography", a: "Pang-kaming Pananaw", q: "What perspective is used when a Filipino tells Philippine history for the benefit of foreigners?", info: "Clue: 'Kami' talking to you (outsiders)." },
+    { category: "Historiography", a: "Pantayong Pananaw", q: "What perspective is used when a Filipino tells history to another Filipino?", info: "Clue: 'Tayo' (Us) talking to 'Tayo' (Us)." },
+    { category: "Historiography", a: "Bisa ng Kasaysayan", q: "What term refers to the power of history to shape identity and patriotism?", info: "Pagkakakilanlan sa identidad ng isang bayan at pag-usbong ng pagmamahal sa bayan." },
+    { category: "Sources", a: "Primary Sources", q: "What are sources that were actual witnesses to an event?", info: "Also known as Primaryang Batis." },
+    { category: "Sources", a: "Pandama", q: "What term refers to sources obtained through the senses (sight, touch, hearing)?", info: "Sila ay malapit sa mga pangyayari at nagagamitan ng pandama." },
+    { category: "Sources", a: "Secondary Sources", q: "What are testimonies from people who were NOT witnesses to the event?", info: "Sekundaryang Batis." },
+    { category: "Sources", a: "Talaarawan", q: "What is a narrative of events written by someone who experienced them (Diary/Journal)?", info: "Naratibo ng mga kaganapan na inakda ng mga tao na mismong nakaranas." },
+    { category: "Sources", a: "Memoir", q: "What type of writing describes events while including the author's own opinions?", info: "Naglalarawan ng mga pangyayari habang bumabanggit ng kanyang sariling kuro-kuro." },
+    { category: "Sources", a: "Artifacts", q: "What are objects dug up by archaeologists that were shaped by human culture?", info: "Also called Artipakto or Liktao." },
+    { category: "Sources", a: "Relikya", q: "What are remains of living things like humans, animals, or plants?", info: "Example: The Metatarsal of Callao Man." },
+    { category: "Sources", a: "Oral History", q: "What refers to passed-down stories, legends, or epics with uncertain origins?", info: "Sali’t saling pahayag, kwento, o salaysay." },
+    { category: "Sources", a: "External Criticism", q: "Which criticism checks the authenticity and physical genuineness of a document?", info: "Kritikang Panlabas: Is the paper real? Is the ink old?" },
+    { category: "Sources", a: "Internal Criticism", q: "Which criticism analyzes the meaning and truthfulness of the content?", info: "Kritikang Panloob: Is the author telling the truth?" },
+    { category: "Repositories", a: "National Museum", q: "Where is the Spoliarium by Juan Luna located?", info: "Pambansang Museo ng Pilipinas in Manila." },
+    { category: "Repositories", a: "National Library", q: "Where are the original copies of Noli Me Tangere and El Filibusterismo kept?", info: "Pambansang Aklatan." },
+    { category: "Repositories", a: "National Archives", q: "Where are official government documents from the Spanish era kept?", info: "Pambansang Sinupan." },
+    { category: "Magellan Expedition", a: "Ferdinand Magellan", q: "Who led the Armada de Molucca?", info: "Captain-general of the expedition." },
+    { category: "Magellan Expedition", a: "Sept 20, 1519", q: "When did the Magellan expedition officially start?", info: "Official start of the voyage into the Atlantic." },
+    { category: "Magellan Expedition", a: "Mercantilism", q: "What economic system drove the accumulation of gold and silver?", info: "The system motivating European expansion." },
+    { category: "Magellan Expedition", a: "God, Gold, Glory", q: "What are the '3Gs' of exploration?", info: "The primary motivations for the expedition." },
+    { category: "Magellan Expedition", a: "Papal Bull", q: "What order by Pope Alexander VI divided the world between Spain and Portugal?", info: "The Inter Caetera Line." },
+    { category: "Magellan Expedition", a: "Antonio Pigafetta", q: "Who was the chronicler of the Magellan expedition?", info: "One of the Sobresalientes (supernumeraries)." },
+    { category: "Magellan Expedition", a: "Ladrones (Guam)", q: "Where did Magellan arrive on March 6, 1521, where he was robbed?", info: "Island of Thieves." },
+    { category: "Magellan Expedition", a: "Homonhon", q: "Where did the expedition arrive on March 16, 1521?", info: "Also known as Zamal/Samar area." },
+    { category: "Magellan Expedition", a: "Mazaua (Limasawa)", q: "Where was the First Mass held on March 31, 1521?", info: "Recorded as the site of the first mass." },
+    { category: "Magellan Expedition", a: "Cebu (Zubu)", q: "Where did the fleet arrive on April 7, 1521?", info: "Major trade hub." },
+    { category: "Magellan Expedition", a: "April 14, 1521", q: "When was the large-scale baptism of Raja Humabon and 800 natives?", info: "A key religious event in Cebu." },
+    { category: "Magellan Expedition", a: "Lapu-lapu", q: "Who was the Chief of Mactan who defeated Magellan?", info: "Also written as Cilapulapu." },
+    { category: "Magellan Expedition", a: "April 27, 1521", q: "When was the Battle of Mactan?", info: "The date Magellan was killed." },
+    { category: "Magellan Expedition", a: "Raja Humabon", q: "Who was the King of Cebu baptized as Don Carlo?", info: "He allied with Magellan." },
+    { category: "Magellan Expedition", a: "Raia Colambu", q: "Who was the King of Mazaua who participated in the Sandugo?", info: "Brother of Raia Siaui." },
+    { category: "Magellan Expedition", a: "Enrique of Malacca", q: "Who was Magellan's slave and interpreter?", info: "Original name: Macalla. He could speak the local language." },
+    { category: "Magellan Expedition", a: "Victoria", q: "Which ship successfully completed the circumnavigation?", info: "The only ship to return to Spain." },
+    { category: "Magellan Expedition", a: "Juan Sebastian Elcano", q: "Who commanded the Victoria back to Spain?", info: "He took over after Magellan's death." },
+    { category: "Magellan Expedition", a: "Sept 6, 1522", q: "When did the Victoria return to Spain?", info: "Completing the first voyage around the world." },
+    { category: "Magellan Expedition", a: "Sandugo", q: "What ritual involves a blood compact between leaders?", info: "Performed with Colambu and Humabon." },
+    { category: "Magellan Expedition", a: "Sto. Niño", q: "What image was gifted to the Queen of Cebu (Johanna)?", info: "Image of the Child Jesus." },
+    { category: "Magellan Expedition", a: "Strait of Magellan", q: "What passage links the Atlantic and Pacific oceans near Chile?", info: "Originally 'Canal de Todos los Santos'." },
+    { category: "Magellan Expedition", a: "Vasco da Gama", q: "Who was Magellan's Portuguese rival?", info: "Famous explorer for Portugal." },
+    { category: "Magellan Expedition", a: "King Charles I", q: "Who funded Magellan's circumnavigation?", info: "King of Spain." },
+    { category: "Magellan Expedition", a: "Zula", q: "Who was the Mactan chief who sought Spanish help against Lapu-Lapu?", info: "Rival of Lapu-Lapu." },
+    { category: "Tagalog Customs", a: "Juan de Plasencia", q: "Who authored 'Relacion de las Costumbres de los Tagalos'?", info: "A Franciscan Friar." },
+    { category: "Tagalog Customs", a: "Reduccion", q: "What policy gathered scattered barangays into centralized pueblos?", info: "Used to easily monitor and convert natives." },
+    { category: "Tagalog Customs", a: "Doctrina Christiana", q: "What was the first book printed in the Philippines (1593)?", info: "Printed by xylography." },
+    { category: "Tagalog Customs", a: "Dato", q: "Who is the chief of the Barangay?", info: "Governs 30-100 families." },
+    { category: "Tagalog Customs", a: "Barangay", q: "What is the basic political unit derived from the boat 'Balangay'?", info: "Community unit." },
+    { category: "Tagalog Customs", a: "Maharlika", q: "Who are the nobles who were free-born and paid no tax?", info: "They accompany the Dato in war." },
+    { category: "Tagalog Customs", a: "Timawa", q: "Who are the freemen or commoners?", info: "They are comrades or bodyguards." },
+    { category: "Tagalog Customs", a: "Aliping Namamahay", q: "Who are the slaves who live in their own houses and own property?", info: "They serve the master but are more independent." },
+    { category: "Tagalog Customs", a: "Aliping Sa Guiguilir", q: "Who are the hearth slaves who serve entirely in the master's house?", info: "They can be sold." },
+    { category: "Tagalog Customs", a: "Social Demotion", q: "What happens if a Maharlika marries a slave?", info: "They lose their rank and wealth is distributed." },
+    { category: "Tagalog Customs", a: "Odd-Even Rule", q: "How is inheritance decided between children of different ranks?", info: "1st, 3rd, 5th follow Father; 2nd, 4th, 6th follow Mother." },
+    { category: "Tagalog Customs", a: "Bathala", q: "Who is the Supreme Being or 'maker of all things'?", info: "The primary deity." },
+    { category: "Tagalog Customs", a: "Tala", q: "Who is the deity of the morning star?", info: "Goddess of stars." },
+    { category: "Tagalog Customs", a: "Dian Masalanta", q: "Who is the patron of lovers and generation?", info: "Deity of fertility and love." },
+    { category: "Tagalog Customs", a: "Lacapati & Idianale", q: "Who are the patrons of agriculture and husbandry?", info: "Gods of cultivated lands." },
+    { category: "Tagalog Customs", a: "Maca", q: "What is the pre-colonial version of Paradise?", info: "Resting place of the just." },
+    { category: "Tagalog Customs", a: "Casanaan", q: "What is the pre-colonial version of Hell?", info: "Place of punishment." },
+    { category: "Tagalog Customs", a: "Sitan", q: "Who is the guardian demon of Casanaan?", info: "Leader of evil agents." },
+    { category: "Tagalog Customs", a: "Catolonan", q: "Who is the highest ranking priest/priestess?", info: "Usually a woman or effeminate man." },
+    { category: "Tagalog Customs", a: "Mangagauay", q: "Which witch pretends to heal but induces sickness?", info: "Deceiver witch." },
+    { category: "Tagalog Customs", a: "Manyisalat", q: "Which priest casts spells to make lovers hate each other?", info: "Breaker of relationships." },
+    { category: "Tagalog Customs", a: "Mancocolam", q: "Which witch emits fire from himself at night?", info: "Fire-emitting sorcerer." },
+    { category: "Tagalog Customs", a: "Hocloban", q: "Which witch can kill merely by raising a hand or wand?", info: "More powerful than Mangagauay." },
+    { category: "Tagalog Customs", a: "Silangan", q: "Which witch eats the liver of the victim?", info: "Associated with Catanduanes." },
+    { category: "Tagalog Customs", a: "Magtatangal", q: "Which creature separates its head from its body?", info: "Walks without a head at night." },
+    { category: "Tagalog Customs", a: "Osuang", q: "Which sorcerer is seen flying and eats flesh?", info: "Flying sorcerer." },
+    { category: "Tagalog Customs", a: "Mangagayoma", q: "Who specializes in charms and love potions?", info: "Love potion maker." },
+    { category: "Tagalog Customs", a: "Sonat", q: "Who is the 'Preacher' who predicts salvation or condemnation?", info: "Predicts the fate of the soul." },
+    { category: "Tagalog Customs", a: "Pangatahoan", q: "Who is the soothsayer or fortune teller?", info: "Predicts the future." },
+    { category: "Tagalog Customs", a: "Bayoguin", q: "What do you call a man whose nature inclines toward that of a woman?", info: "Cotquean / Asog." },
+    { category: "Tagalog Customs", a: "Bigay-kaya", q: "What is the dowry given by the groom to the bride's parents?", info: "Economic exchange in marriage." },
+    { category: "Tagalog Customs", a: "Paninilbihan", q: "What is the service rendered by the groom to the bride's family?", info: "Servitude before marriage." },
+    { category: "Tagalog Customs", a: "Pandot", q: "What is the festival of worship celebrated in a chief's house?", info: "Worship ritual." },
+    { category: "Tagalog Customs", a: "Sibi", q: "What is the temporary roof constructed for the Pandot?", info: "Shed for the festival." },
+    { category: "Tagalog Customs", a: "Mapolo", q: "What star cluster signals the planting season (Pleiades)?", info: "Agricultural sign." },
+    { category: "Tagalog Customs", a: "Balatic", q: "What is the Greater Bear/Orion constellation?", info: "Constellation." },
+    { category: "Tagalog Customs", a: "Buaya (Crocodile)", q: "Which animal was respected, feared, and offered food?", info: "Feared river creature." },
+    { category: "Tagalog Customs", a: "Frailocracia", q: "What term describes the rule of the friars in government?", info: "Priestly rule." },
+    { category: "Tagalog Customs", a: "Marcelo H. del Pilar", q: "Who coined the term 'Frailocracia'?", info: "In his work 'La Soberania Monacal en Filipinas'." },
+    { category: "Tagalog Customs", a: "Bajo de las Campanas", q: "What implies living within hearing distance of church bells?", info: "Under the bells." },
+    { category: "Tagalog Customs", a: "Kaingin", q: "What is slash and burn agriculture?", info: "Burning forests for land." },
+    { category: "Tagalog Customs", a: "Umaholokan", q: "Who is the town crier who announces laws?", info: "Announcer." },
+    { category: "Tagalog Customs", a: "Putong", q: "What headgear signifies the wearer has killed someone if red?", info: "Head wrap." },
+    { category: "Tagalog Customs", a: "Pintados", q: "Who are the tattooed people of the Visayas?", info: "Painted ones." },
+    { category: "Tagalog Customs", a: "Lic-ha", q: "What are images or idols representing spirits?", info: "Carved idols." },
+    { category: "Misc", a: "Ruy López de Villalobos", q: "Who gave the name 'Las Islas Filipinas'?", info: "In 1543, honoring Prince Philip." },
+    { category: "Misc", a: "AFJDBR", q: "What acronym represents the Religious Orders in the Philippines?", info: "Augustinians, Franciscans, Jesuits, Dominicans, Benedictines, Recollects." },
+    { category: "Misc", a: "Plaza Complex", q: "What town layout features the Church, Government, and Market around a center?", info: "Spanish colonial urban planning." },
+    { category: "Misc", a: "Animism", q: "What is the belief that natural objects possess spirits?", info: "Nature worship." },
+    { category: "Misc", a: "Paganism", q: "What is the missionary term for non-Christian worship?", info: "Religious label." },
+    { category: "Misc", a: "Trial by Ordeal", q: "What judicial process involves dangerous tests where gods protect the innocent?", info: "e.g., Boiling water test." },
+    { category: "Misc", a: "Biag ni Lam-ang", q: "What epic shows Filipino resilience and magical adventures?", info: "Ilocano epic." },
+    { category: "Misc", a: "Malakas at Maganda", q: "Which creation myth depicts gender equality (Egalitarianism)?", info: "Origin of man and woman from bamboo." },
+    { category: "Misc", a: "Zeus Salazar", q: "Who is the main proponent of Pantayong Pananaw?", info: "Historian and ethnologist." },
+    { category: "Misc", a: "Paleography", q: "What science studies ancient writing systems?", info: "Study of old scripts." },
+    { category: "Misc", a: "Numismatics", q: "What science studies coins and currency?", info: "Money study." },
+    { category: "Misc", a: "Cartography", q: "What is the study and creation of maps?", info: "Map making." },
+    { category: "Misc", a: "Restitution", q: "What is the correction of a source to restore it to its original form?", info: "Fixing a text." },
+    { category: "Misc", a: "Indio", q: "What was the derogatory term for natives during the Spanish era?", info: "Implied lower status." }
 ];
 
 // --- APP STATE ---
@@ -332,6 +362,9 @@ const categoryBadge = document.getElementById('categoryBadge');
 const progressFill = document.getElementById('progressFill');
 const finalScore = document.getElementById('finalScore');
 const finalMessage = document.getElementById('finalMessage');
+const feedbackBox = document.getElementById('feedbackBox');
+const feedbackText = document.getElementById('feedbackText');
+const nextBtn = document.getElementById('nextBtn');
 
 // --- UTILITIES ---
 function shuffleArray(array) {
@@ -342,44 +375,42 @@ function shuffleArray(array) {
     return array;
 }
 
-// Get 3 wrong answers, preferably from the same category
+// Get 3 wrong answers (just the Terms)
 function getDistractors(correctItem) {
-    // Filter for same category but not the correct item
+    // 1. Get items from same category, excluding correct one
     let sameCategory = rawData.filter(item => 
         item.category === correctItem.category && item.a !== correctItem.a
     );
     
-    // Filter for different category
+    // 2. Get items from other categories (fallback)
     let differentCategory = rawData.filter(item => 
         item.category !== correctItem.category
     );
 
     let distractors = [];
 
-    // Try to get at least 2 from same category
+    // Shuffle and pick
     shuffleArray(sameCategory);
     distractors.push(...sameCategory.slice(0, 3));
 
-    // Fill the rest with random other categories if needed
+    // Fill if needed
     if (distractors.length < 3) {
         shuffleArray(differentCategory);
         distractors.push(...differentCategory.slice(0, 3 - distractors.length));
     }
     
-    // Use only the first 3 found
-    return distractors.slice(0, 3).map(d => d.a);
+    // Return only the Answer strings
+    return distractors.map(d => d.a);
 }
 
 // --- GAME LOGIC ---
 
 function startQuiz() {
-    // Reset State
-    quizPool = shuffleArray([...rawData]); // Shuffle all questions
+    quizPool = shuffleArray([...rawData]); 
     currentQuestionIndex = 0;
     score = 0;
     isAnswered = false;
 
-    // UI Updates
     startScreen.classList.remove('active');
     resultScreen.classList.remove('active');
     quizScreen.classList.add('active');
@@ -395,18 +426,19 @@ function showQuestion() {
 
     const item = quizPool[currentQuestionIndex];
     isAnswered = false;
+    feedbackBox.classList.remove('show'); // Hide feedback
+    optionsGrid.style.pointerEvents = 'auto'; // Enable clicks
 
-    // Update Header Info
+    // Update Header
     questionCount.innerText = `Question ${currentQuestionIndex + 1} / ${quizPool.length}`;
     scoreDisplay.innerText = `Score: ${score}`;
     categoryBadge.innerText = item.category;
     categoryBadge.style.display = 'inline-block';
     
-    // Progress Bar
     const progressPercent = ((currentQuestionIndex) / quizPool.length) * 100;
     progressFill.style.width = `${progressPercent}%`;
 
-    // Set Text
+    // Set Question
     questionText.innerText = item.q;
 
     // Generate Options
@@ -420,38 +452,50 @@ function showQuestion() {
         const btn = document.createElement('button');
         btn.className = 'option-btn';
         btn.innerText = opt;
-        btn.onclick = () => handleAnswer(btn, opt, item.a);
+        btn.onclick = () => handleAnswer(btn, opt, item);
         optionsGrid.appendChild(btn);
     });
 }
 
-function handleAnswer(selectedBtn, selectedAnswer, correctAnswer) {
+function handleAnswer(selectedBtn, selectedAnswer, item) {
     if (isAnswered) return;
     isAnswered = true;
 
     const buttons = optionsGrid.querySelectorAll('.option-btn');
+    optionsGrid.style.pointerEvents = 'none'; // Prevent double clicks
 
-    if (selectedAnswer === correctAnswer) {
+    let isCorrect = false;
+
+    if (selectedAnswer === item.a) {
         score++;
         selectedBtn.classList.add('correct');
+        isCorrect = true;
     } else {
         selectedBtn.classList.add('wrong');
-        // Highlight the correct one
+        // Highlight correct
         buttons.forEach(btn => {
-            if (btn.innerText === correctAnswer) {
+            if (btn.innerText === item.a) {
                 btn.classList.add('correct');
             }
         });
     }
 
-    // Disable all buttons
-    buttons.forEach(btn => btn.disabled = true);
+    // Show Feedback
+    feedbackText.innerText = isCorrect 
+        ? `Correct! ${item.info}` 
+        : `Wrong. The correct answer is ${item.a}. ${item.info}`;
+    
+    feedbackBox.classList.add('show');
+    
+    // Auto-scroll to feedback on mobile
+    if(window.innerWidth < 600) {
+        feedbackBox.scrollIntoView({behavior: "smooth"});
+    }
+}
 
-    // Next question delay
-    setTimeout(() => {
-        currentQuestionIndex++;
-        showQuestion();
-    }, 1500); // 1.5 seconds wait
+function nextQuestion() {
+    currentQuestionIndex++;
+    showQuestion();
 }
 
 function endQuiz() {
@@ -460,20 +504,13 @@ function endQuiz() {
 
     const percentage = Math.round((score / quizPool.length) * 100);
     finalScore.innerText = `${percentage}%`;
-    
     progressFill.style.width = '100%';
 
-    if (percentage === 100) {
-        finalMessage.innerText = "Perfect! You're a history master!";
-    } else if (percentage >= 80) {
-        finalMessage.innerText = "Excellent work! You really know your stuff.";
-    } else if (percentage >= 60) {
-        finalMessage.innerText = "Good job! A little more review and you'll ace it.";
-    } else {
-        finalMessage.innerText = "Keep practicing! Review the cards again.";
-    }
+    if (percentage === 100) finalMessage.innerText = "Perfect! You're a history master!";
+    else if (percentage >= 80) finalMessage.innerText = "Excellent work!";
+    else if (percentage >= 60) finalMessage.innerText = "Good job! Keep reviewing.";
+    else finalMessage.innerText = "Keep practicing!";
 }
-
 </script>
 
 </body>

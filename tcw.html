@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TCW Interactive Quiz</title>
+    <title>TCW Reviewer (Fixed)</title>
     <style>
         :root {
             /* TCW Green Theme */
@@ -68,6 +68,7 @@
             border-radius: 8px;
             cursor: pointer;
             transition: transform 0.2s, background 0.2s;
+            margin-top: 10px;
         }
         .btn:hover { transform: translateY(-2px); background: var(--accent); }
 
@@ -99,6 +100,7 @@
         }
         .options-grid {
             display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 12px;
         }
         .option-btn {
@@ -106,11 +108,15 @@
             border: 2px solid #e0e0e0;
             padding: 15px;
             border-radius: 8px;
-            text-align: left;
+            text-align: center;
             cursor: pointer;
             font-size: 1rem;
             transition: all 0.2s;
             color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 60px;
         }
         .option-btn:hover:not(:disabled) {
             border-color: var(--accent);
@@ -130,6 +136,19 @@
             cursor: default;
             opacity: 0.7;
         }
+
+        /* Feedback Section */
+        .feedback-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: #eef2f5;
+            border-left: 5px solid var(--accent);
+            border-radius: 4px;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .feedback-box.show { display: block; }
+        .feedback-title { font-weight: bold; display: block; margin-bottom: 5px; color: var(--primary); }
 
         /* Result Screen */
         .result-screen { text-align: center; justify-content: center; align-items: center; }
@@ -152,15 +171,17 @@
         @media (max-width: 600px) {
             .container { border-radius: 0; height: 100vh; }
             .question-text { font-size: 1.1rem; }
-            .option-btn { padding: 12px; font-size: 0.9rem; }
+            .options-grid { grid-template-columns: 1fr; } /* Stack buttons on mobile */
+            .option-btn { padding: 12px; font-size: 0.9rem; min-height: 50px; }
         }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
     <div class="container">
         <div class="header">
-            <h1>TCW Comprehensive Reviewer</h1>
+            <h1>TCW Reviewer</h1>
             <span id="categoryBadge" class="category-badge" style="display:none">General</span>
         </div>
 
@@ -171,7 +192,7 @@
         <!-- Start Screen -->
         <div id="startScreen" class="screen active start-screen">
             <h2>The Contemporary World</h2>
-            <p>Reviewing Global Divides, Asian Regionalism, Religion, and Digital Divides.</p>
+            <p>I fixed the choices! The definition now only appears AFTER you answer.</p>
             <button class="btn" onclick="startQuiz()">Start Quiz</button>
         </div>
 
@@ -187,6 +208,14 @@
             <div id="optionsGrid" class="options-grid">
                 <!-- Options injected by JS -->
             </div>
+
+            <!-- Explanation/Feedback Area -->
+            <div id="feedbackBox" class="feedback-box">
+                <span class="feedback-title">Did you know?</span>
+                <span id="feedbackText"></span>
+                <br>
+                <button class="btn" id="nextBtn" style="width:100%; padding: 10px; margin-top:10px;" onclick="nextQuestion()">Next Question</button>
+            </div>
         </div>
 
         <!-- Result Screen -->
@@ -201,78 +230,73 @@
     </div>
 
 <script>
-// --- TCW DATA SOURCE ---
+// --- CLEANED DATA SOURCE ---
+// a = The Choice (Term), q = The Question (Definition), info = The Explanation (After)
 const rawData = [
-    { category: "Global Divides", q: "Who originally coined the term 'Global South' in 1969?", a: "Carl Oglesby : American political activist who used the term to describe countries dominated by the North." },
-    { category: "Global Divides", q: "What is the 'Brandt Line'?", a: "Brandt Line : An imaginary line proposed in the 1980s visually depicting the North-South divide based on GDP per capita." },
-    { category: "Global Divides", q: "Which hemisphere contains most of the 'Global North' countries?", a: "Northern Hemisphere : Home to richer, developed nations (except Australia/NZ)." },
-    { category: "Global Divides", q: "What is the primary characteristic of the 'Global South'?", a: "Developing/Agrarian : Economies often characterized by poverty, post-colonialism, and instability." },
-    { category: "Global Divides", q: "Which countries are exceptions located in the Southern Hemisphere but considered 'Global North'?", a: "Australia and New Zealand : Wealthy nations located below the Brandt Line." },
-    { category: "Global Divides", q: "What does the 'Third World' term historically refer to?", a: "Non-Aligned Movement : Countries that were not aligned with NATO (First World) or the Communist Bloc (Second World) during the Cold War." },
-    { category: "Global Divides", q: "What percentage of the world population lives in the Global South?", a: "Three-Quarters (75%) : The majority of the world's population resides in developing nations." },
-    { category: "Global Divides", q: "What are the key problems faced by the Global North?", a: "Overconsumption and Aging : Issues like food wastage, expensive healthcare, and zero population growth." },
-    { category: "Global Divides", q: "What is 'Neocolonialism'?", a: "Neocolonialism : The use of economic, political, cultural, or other pressures to control or influence other countries, especially former dependencies." },
-    { category: "Global Divides", q: "What is the 'Human Development Index' (HDI)?", a: "HDI : A measure of progress that includes life expectancy, education, and income, not just economic development." },
-    { category: "Asian Regionalism", q: "What does 'ASEAN' stand for?", a: "ASEAN : Association of Southeast Asian Nations." },
-    { category: "Asian Regionalism", q: "When was ASEAN established?", a: "1967 : The year ASEAN was formed." },
-    { category: "Asian Regionalism", q: "What are the three pillars of the ASEAN Community?", a: "Political-Security, Economic, Socio-Cultural : The three supporting pillars of ASEAN integration." },
-    { category: "Asian Regionalism", q: "What is the goal of the ASEAN Economic Community (AEC)?", a: "Single Market : To create a highly integrated economy with free flow of goods, services, and skilled labor." },
-    { category: "Asian Regionalism", q: "What is 'AFTA'?", a: "AFTA : ASEAN Free Trade Area, signed in 1992 to eliminate tariffs." },
-    { category: "Asian Regionalism", q: "What is the 'ASEAN Way'?", a: "ASEAN Way : A style of diplomacy based on non-interference, consensus-building, and peaceful conflict resolution." },
-    { category: "Asian Regionalism", q: "Which pillar focuses on human rights, justice, and regional peace?", a: "APSC (ASEAN Political-Security Community) : Envisions a rules-based and inclusive community." },
-    { category: "Asian Regionalism", q: "Which pillar focuses on culture, arts, and poverty eradication?", a: "ASCC (ASEAN Socio-Cultural Community) : Committed to lifting the quality of life and fostering ASEAN identity." },
-    { category: "Asian Regionalism", q: "What is 'Regionalism'?", a: "Regionalism : The process of dividing an area into smaller segments called regions (or the theory/practice of coordinating social, economic, or political activities within a region)." },
-    { category: "Asian Regionalism", q: "What is 'Regionalization'?", a: "Regionalization : The actual growth of societal integration within a region and the often undirected process of social and economic interaction." },
-    { category: "Religion", q: "What is 'Glocalization of Religion'?", a: "Glocalization : The practice of mixing universal religious beliefs with local/unfamiliar practices (Universal + Local)." },
-    { category: "Religion", q: "What is 'Vernacularization' in religion?", a: "Vernacularization : Blending religious universalism with specific native languages (e.g., Arabic in Islam)." },
-    { category: "Religion", q: "What is 'Indigenization' in religion?", a: "Indigenization : Blending religious universalism with local particularism by adopting local rituals and ethnicity." },
-    { category: "Religion", q: "What is 'Secularization'?", a: "Secularization : The transformation of a society from close identification with religious values to nonreligious values." },
-    { category: "Religion", q: "Who defined religion as a 'search for significance related to the sacred'?", a: "Kenneth Pargament : A psychologist who distinguishes religion from spirituality." },
-    { category: "Religion", q: "What are the three essential elements of religion?", a: "Observable phenomenon, Organized system, Sacredness : The core components defined in social sciences." },
-    { category: "Religion", q: "How does globalization affect religion?", a: "Circulation : It allows religions and practices to circulate worldwide via migration and internet." },
-    { category: "Religion", q: "What is 'Religious Coping'?", a: "Religious Coping : Using religion as a psychological shield/mechanism to battle life's challenges." },
-    { category: "Religion", q: "What major religions identify the majority of the world's 5.8 billion believers?", a: "Christians, Muslims, Hindus : The three largest religious groups." },
-    { category: "Religion", q: "What concept opposes the 'demise of religion' theory?", a: "Desecularization (or Resurgence) : The counter-trend where religion remains relevant despite modernization." },
-    { category: "Digital Divide", q: "What is the 'Digital Divide'?", a: "Digital Divide : The gap between individuals/communities who have access to ICT and those who do not." },
-    { category: "Digital Divide", q: "What is the 'Access Divide'?", a: "Access Divide : Disparities in the physical ability to connect to the internet or own devices." },
-    { category: "Digital Divide", q: "What is the 'Skills Divide'?", a: "Skills Divide : Differences in digital literacy or the ability to navigate technology effectively." },
-    { category: "Digital Divide", q: "What is the 'Homework Gap'?", a: "Homework Gap : The struggle school-age children face when they cannot complete assignments due to lack of home internet." },
-    { category: "Digital Divide", q: "Which demographic often faces a 'Skills Divide'?", a: "Older Adults (Elderly) : Often have devices but feel overwhelmed or lack confidence in using them." },
-    { category: "Digital Divide", q: "How does the Digital Divide affect healthcare?", a: "Telehealth Access : Patients without access cannot use online portals or telehealth services, missing medical info." },
-    { category: "Digital Divide", q: "What does 'ICT' stand for?", a: "ICT : Information and Communication Technology." },
-    { category: "Digital Divide", q: "What is 'Digital Literacy'?", a: "Digital Literacy : The ability to find, evaluate, and compose information through various digital platforms." },
-    { category: "Digital Divide", q: "What is the 'Usage Divide'?", a: "Usage Divide : How people use technology differently based on socioeconomic status (e.g., entertainment vs. education)." },
-    { category: "Digital Divide", q: "Why do rural communities often face infrastructure gaps?", a: "Profitability : Installing broadband in sparsely populated areas is less profitable for providers." },
-    { category: "Culture", q: "What is 'Culturalism'?", a: "Culturalism : The idea that individuals are determined by their culture." },
-    { category: "Culture", q: "What is 'Multiculturalism'?", a: "Multiculturalism : The presence of, or support for the presence of, several distinct cultural or ethnic groups within a society." },
-    { category: "Culture", q: "What is the 'Melting Pot' theory?", a: "Melting Pot : Metaphor for a heterogeneous society becoming more homogeneous (assimilation)." },
-    { category: "Culture", q: "What is the 'Salad Bowl' theory?", a: "Salad Bowl : Cultures mix but retain their unique distinctions (integration without total assimilation)." },
-    { category: "Culture", q: "What is 'Cultural Imperialism'?", a: "Cultural Imperialism : The imposition of one culture's values and beliefs upon another culture." },
-    { category: "Culture", q: "What is 'Cultural Hybridity'?", a: "Cultural Hybridity : The blending of elements from different cultures to create something new." },
-    { category: "Culture", q: "What is 'Ethnocentrism'?", a: "Ethnocentrism : Evaluating other cultures according to the standards of one's own culture." },
-    { category: "Culture", q: "What is 'Cultural Relativism'?", a: "Cultural Relativism : The principle that an individual's beliefs and activities should be understood in terms of their own culture." },
-    { category: "Culture", q: "What is 'McDonaldization'?", a: "McDonaldization : The process by which the principles of the fast-food restaurant are coming to dominate sectors of society." },
-    { category: "Culture", q: "What is 'Heterogenization' in globalization?", a: "Heterogenization : The view that globalization enables the maintenance and strengthening of local cultural distinctions." },
-    { category: "World of Ideas", q: "What is 'Global Media'?", a: "Global Media : Forms of mass communication that reach across the world." },
-    { category: "World of Ideas", q: "What is the 'Global Village'?", a: "Global Village : Marshall McLuhan's term for the world considered as a single community linked by telecommunications." },
-    { category: "World of Ideas", q: "What is 'Media Imperialism'?", a: "Media Imperialism : A theory stating that smaller countries lose their identity due to the dominance of media from larger nations." },
-    { category: "World of Ideas", q: "What is 'Cyberbalkanization' (or Splinternet)?", a: "Cyberbalkanization : The segregation of the Internet into smaller groups with similar interests, preventing open discourse." },
-    { category: "World of Ideas", q: "What is 'Fake News'?", a: "Fake News : False or misleading information presented as news." },
-    { category: "World of Ideas", q: "What is 'Information Society'?", a: "Information Society : A society where the creation, distribution, and manipulation of information is a significant economic and cultural activity." },
-    { category: "World of Ideas", q: "What is 'Echo Chamber'?", a: "Echo Chamber : An environment where a person only encounters information or opinions that reflect and reinforce their own." },
-    { category: "World of Ideas", q: "What is 'Soft Power'?", a: "Soft Power : The ability to shape the preferences of others through appeal and attraction (culture, values) rather than coercion." },
-    { category: "World of Ideas", q: "What is 'Cultural Homogenization'?", a: "Homogenization : The reduction in cultural diversity through the popularization and diffusion of a wide array of cultural symbols." },
-    { category: "World of Ideas", q: "What is the role of 'Social Media' in globalization?", a: "Connectivity : It accelerates the flow of ideas and information, connecting people instantly across borders." },
-    { category: "Misc", q: "What is 'Globalization'?", a: "Globalization : The expansion and intensification of social relations and consciousness across world-time and world-space." },
-    { category: "Misc", q: "What is 'Economic Globalization'?", a: "Economic Globalization : The increasing integration of economies around the world, particularly through the movement of goods, services, and capital." },
-    { category: "Misc", q: "What is 'Outsourcing'?", a: "Outsourcing : Obtaining goods or services from an outside or foreign supplier." },
-    { category: "Misc", q: "What is 'Offshoring'?", a: "Offshoring : The practice of basing some of a company's processes or services overseas to take advantage of lower costs." },
-    { category: "Misc", q: "What is the 'World Bank'?", a: "World Bank : An international financial institution that provides loans and grants to the governments of low- and middle-income countries." },
-    { category: "Misc", q: "What is the 'IMF'?", a: "IMF : International Monetary Fund; works to foster global monetary cooperation and secure financial stability." },
-    { category: "Misc", q: "What is the 'WTO'?", a: "WTO : World Trade Organization; the only global international organization dealing with the rules of trade between nations." },
-    { category: "Misc", q: "What is 'Sustainable Development'?", a: "Sustainable Development : Development that meets the needs of the present without compromising the ability of future generations to meet their own needs." },
-    { category: "Misc", q: "What are 'TNCs'?", a: "TNCs : Transnational Corporations; companies that operate in more than one country." },
-    { category: "Misc", q: "What is 'Migration'?", a: "Migration : The movement of people from one place to another with the intentions of settling, permanently or temporarily." }
+    { category: "Global Divides", a: "Carl Oglesby", q: "Who originally coined the term 'Global South' in 1969?", info: "He was an American political activist who used the term to describe countries dominated by the North." },
+    { category: "Global Divides", a: "Brandt Line", q: "What is the imaginary line proposed in the 1980s visually depicting the North-South divide?", info: "It splits the world based on GDP per capita." },
+    { category: "Global Divides", a: "Northern Hemisphere", q: "Which hemisphere contains most of the 'Global North' countries?", info: "Home to richer, developed nations (except Australia/NZ)." },
+    { category: "Global Divides", a: "Developing/Agrarian", q: "What is the primary economic characteristic of the 'Global South'?", info: "Economies often characterized by poverty, post-colonialism, and instability." },
+    { category: "Global Divides", a: "Australia & NZ", q: "Which countries are exceptions located in the Southern Hemisphere but considered 'Global North'?", info: "They are wealthy nations located below the Brandt Line." },
+    { category: "Global Divides", a: "Non-Aligned Movement", q: "What does the 'Third World' term historically refer to during the Cold War?", info: "Countries that were not aligned with NATO (1st World) or the Communist Bloc (2nd World)." },
+    { category: "Global Divides", a: "75%", q: "Approximately what percentage of the world population lives in the Global South?", info: "Three-Quarters of the world resides in developing nations." },
+    { category: "Global Divides", a: "Aging Population", q: "Along with overconsumption, what is a key demographic problem faced by the Global North?", info: "Issues like expensive healthcare and zero population growth due to old age." },
+    { category: "Global Divides", a: "Neocolonialism", q: "What is the use of economic or political pressures to control other countries (especially former colonies)?", info: "Indirect control unlike direct military colonialism." },
+    { category: "Global Divides", a: "HDI (Human Development Index)", q: "What measure of progress includes life expectancy, education, and income?", info: "It moves beyond just measuring GDP." },
+    
+    { category: "Asian Regionalism", a: "ASEAN", q: "What organization was established in 1967 for Southeast Asian cooperation?", info: "Association of Southeast Asian Nations." },
+    { category: "Asian Regionalism", a: "1967", q: "In what year was ASEAN established?", info: "Bangkok Declaration." },
+    { category: "Asian Regionalism", a: "Pol-Sec, Econ, Socio-Cult", q: "What are the three pillars of the ASEAN Community?", info: "Political-Security, Economic, and Socio-Cultural." },
+    { category: "Asian Regionalism", a: "Single Market", q: "What is the primary goal of the ASEAN Economic Community (AEC)?", info: "To create a highly integrated economy with free flow of goods and skilled labor." },
+    { category: "Asian Regionalism", a: "AFTA", q: "What agreement was signed in 1992 to eliminate tariffs in the region?", info: "ASEAN Free Trade Area." },
+    { category: "Asian Regionalism", a: "ASEAN Way", q: "What is the style of diplomacy based on non-interference and consensus-building?", info: "Quiet diplomacy and avoiding public confrontation." },
+    { category: "Asian Regionalism", a: "APSC", q: "Which ASEAN pillar focuses on human rights, justice, and regional peace?", info: "ASEAN Political-Security Community." },
+    { category: "Asian Regionalism", a: "ASCC", q: "Which ASEAN pillar focuses on culture, arts, and poverty eradication?", info: "ASEAN Socio-Cultural Community." },
+    { category: "Asian Regionalism", a: "Regionalism", q: "What is the formal process of dividing an area into segments or coordinating political activities?", info: "This is the top-down policy." },
+    { category: "Asian Regionalism", a: "Regionalization", q: "What is the actual growth of societal integration and economic interaction within a region?", info: "This is the bottom-up process (markets, people)." },
+    
+    { category: "Religion", a: "Glocalization", q: "What is the practice of mixing universal religious beliefs with local practices?", info: "Universal + Local." },
+    { category: "Religion", a: "Vernacularization", q: "What is the blending of religious universalism with specific native languages?", info: "Example: Using Arabic for Islam or Latin for Catholicism." },
+    { category: "Religion", a: "Indigenization", q: "What is the blending of religious universalism with local rituals and ethnicity?", info: "Making the religion 'native' to the place." },
+    { category: "Religion", a: "Secularization", q: "What is the transformation of a society from religious values to nonreligious values?", info: "Separation of church and state/society." },
+    { category: "Religion", a: "Kenneth Pargament", q: "Who defined religion as a 'search for significance related to the sacred'?", info: "A psychologist who distinguishes religion from spirituality." },
+    { category: "Religion", a: "Sacredness", q: "Complete the three elements of religion: Observable phenomenon, Organized system, and...?", info: "Something holy or divine." },
+    { category: "Religion", a: "Religious Coping", q: "What is the use of religion as a psychological shield to battle life's challenges?", info: "Turning to faith during hard times." },
+    { category: "Religion", a: "Christians, Muslims, Hindus", q: "What are the three largest religious groups in the world?", info: "They make up the majority of believers." },
+    { category: "Religion", a: "Desecularization", q: "What concept opposes the 'demise of religion' theory (also called Resurgence)?", info: "The counter-trend where religion remains relevant." },
+
+    { category: "Digital Divide", a: "Digital Divide", q: "What is the gap between individuals/communities who have access to ICT and those who do not?", info: "The gap in technology." },
+    { category: "Digital Divide", a: "Access Divide", q: "What specific divide refers to disparities in physical ability to connect (owning a device)?", info: "First level: Do you have a computer?" },
+    { category: "Digital Divide", a: "Skills Divide", q: "What specific divide refers to differences in digital literacy?", info: "Second level: Do you know how to use it?" },
+    { category: "Digital Divide", a: "Homework Gap", q: "What is the struggle children face when they cannot complete assignments due to lack of home internet?", info: "A major issue in education inequality." },
+    { category: "Digital Divide", a: "Elderly", q: "Which demographic most often faces a 'Skills Divide'?", info: "They may have devices but feel overwhelmed using them." },
+    { category: "Digital Divide", a: "Telehealth", q: "Access to what medical service is most affected by the digital divide?", info: "Remote healthcare." },
+    { category: "Digital Divide", a: "ICT", q: "What stands for Information and Communication Technology?", info: "The infrastructure of the digital age." },
+    { category: "Digital Divide", a: "Digital Literacy", q: "What is the ability to find, evaluate, and compose information through digital platforms?", info: "Being smart online." },
+    { category: "Digital Divide", a: "Usage Divide", q: "What divide refers to how people use tech differently (e.g., entertainment vs. education)?", info: "Rich use it for work; poor might use it only for games." },
+    { category: "Digital Divide", a: "Profitability", q: "Why do rural communities often face infrastructure gaps?", info: "It is expensive for companies to build lines where few people live." },
+
+    { category: "Culture", a: "Culturalism", q: "What is the idea that individuals are determined by their culture?", info: "You are your culture." },
+    { category: "Culture", a: "Multiculturalism", q: "What is the support for the presence of several distinct ethnic groups within a society?", info: "Many cultures living together." },
+    { category: "Culture", a: "Melting Pot", q: "What metaphor describes a society becoming homogeneous (Assimilation)?", info: "Everything melts into one new thing." },
+    { category: "Culture", a: "Salad Bowl", q: "What metaphor describes cultures mixing but retaining unique distinctions (Integration)?", info: "Ingredients stay separate but are in the same bowl." },
+    { category: "Culture", a: "Cultural Imperialism", q: "What is the imposition of one culture's values upon another?", info: "Forcing culture on others." },
+    { category: "Culture", a: "Hybridity", q: "What is the blending of elements from different cultures to create something new?", info: "Mixing to create a hybrid." },
+    { category: "Culture", a: "Ethnocentrism", q: "What is evaluating other cultures according to the standards of one's own?", info: "Believing your culture is the 'correct' one." },
+    { category: "Culture", a: "McDonaldization", q: "What is the process by which principles of fast-food dominate society (Efficiency/Control)?", info: "Theory by George Ritzer." },
+    { category: "Culture", a: "Heterogenization", q: "What view suggests globalization enables the strengthening of local cultural distinctions?", info: "Opposite of homogenization." },
+
+    { category: "World of Ideas", a: "Global Village", q: "What is Marshall McLuhan's term for the world linked by telecommunications?", info: "The world feels like a small village." },
+    { category: "World of Ideas", a: "Cyberbalkanization", q: "What is the segregation of the Internet into smaller groups with similar interests (Splinternet)?", info: "People separate into tribes online." },
+    { category: "World of Ideas", a: "Echo Chamber", q: "What is an environment where a person only encounters opinions that reinforce their own?", info: "You only hear what you agree with." },
+    { category: "World of Ideas", a: "Soft Power", q: "What is the ability to shape preferences through attraction (culture) rather than coercion?", info: "Winning hearts and minds (e.g., K-Pop)." },
+    { category: "World of Ideas", a: "Homogenization", q: "What is the reduction in cultural diversity through the diffusion of dominant symbols?", info: "Everything starts looking the same." },
+    
+    { category: "Misc", a: "Globalization", q: "What is the expansion and intensification of social relations across world-time and space?", info: "The core concept of the subject." },
+    { category: "Misc", a: "Outsourcing", q: "What is obtaining goods or services from an outside supplier?", info: "Contracting work out." },
+    { category: "Misc", a: "Offshoring", q: "What is basing a company's processes overseas to take advantage of lower costs?", info: "Moving the factory to another country." },
+    { category: "Misc", a: "WTO", q: "Which organization deals with the rules of trade between nations?", info: "World Trade Organization." },
+    { category: "Misc", a: "TNCs", q: "What are companies that operate in more than one country?", info: "Transnational Corporations." }
 ];
 
 // --- APP STATE ---
@@ -294,6 +318,9 @@ const categoryBadge = document.getElementById('categoryBadge');
 const progressFill = document.getElementById('progressFill');
 const finalScore = document.getElementById('finalScore');
 const finalMessage = document.getElementById('finalMessage');
+const feedbackBox = document.getElementById('feedbackBox');
+const feedbackText = document.getElementById('feedbackText');
+const nextBtn = document.getElementById('nextBtn');
 
 // --- UTILITIES ---
 function shuffleArray(array) {
@@ -304,35 +331,38 @@ function shuffleArray(array) {
     return array;
 }
 
-// Get 3 wrong answers, preferably from the same category
+// Get 3 wrong answers (just the Terms)
 function getDistractors(correctItem) {
+    // 1. Get items from same category, excluding correct one
     let sameCategory = rawData.filter(item => 
         item.category === correctItem.category && item.a !== correctItem.a
     );
     
+    // 2. Get items from other categories (fallback)
     let differentCategory = rawData.filter(item => 
         item.category !== correctItem.category
     );
 
     let distractors = [];
 
-    // Try to get 2 or 3 from same category for difficulty
+    // Shuffle and pick
     shuffleArray(sameCategory);
     distractors.push(...sameCategory.slice(0, 3));
 
-    // Fill with others if not enough
+    // Fill if needed
     if (distractors.length < 3) {
         shuffleArray(differentCategory);
         distractors.push(...differentCategory.slice(0, 3 - distractors.length));
     }
     
-    return distractors.slice(0, 3).map(d => d.a);
+    // Return only the Answer strings
+    return distractors.map(d => d.a);
 }
 
 // --- GAME LOGIC ---
 
 function startQuiz() {
-    quizPool = shuffleArray([...rawData]); // Shuffle all
+    quizPool = shuffleArray([...rawData]); 
     currentQuestionIndex = 0;
     score = 0;
     isAnswered = false;
@@ -352,8 +382,10 @@ function showQuestion() {
 
     const item = quizPool[currentQuestionIndex];
     isAnswered = false;
+    feedbackBox.classList.remove('show'); // Hide feedback
+    optionsGrid.style.pointerEvents = 'auto'; // Enable clicks
 
-    // UI Updates
+    // Update Header
     questionCount.innerText = `Question ${currentQuestionIndex + 1} / ${quizPool.length}`;
     scoreDisplay.innerText = `Score: ${score}`;
     categoryBadge.innerText = item.category;
@@ -362,47 +394,64 @@ function showQuestion() {
     const progressPercent = ((currentQuestionIndex) / quizPool.length) * 100;
     progressFill.style.width = `${progressPercent}%`;
 
+    // Set Question
     questionText.innerText = item.q;
 
-    // Options
+    // Generate Options
     const distractors = getDistractors(item);
     const options = [item.a, ...distractors];
     shuffleArray(options);
 
+    // Render Buttons
     optionsGrid.innerHTML = '';
     options.forEach(opt => {
         const btn = document.createElement('button');
         btn.className = 'option-btn';
         btn.innerText = opt;
-        btn.onclick = () => handleAnswer(btn, opt, item.a);
+        btn.onclick = () => handleAnswer(btn, opt, item);
         optionsGrid.appendChild(btn);
     });
 }
 
-function handleAnswer(selectedBtn, selectedAnswer, correctAnswer) {
+function handleAnswer(selectedBtn, selectedAnswer, item) {
     if (isAnswered) return;
     isAnswered = true;
 
     const buttons = optionsGrid.querySelectorAll('.option-btn');
+    optionsGrid.style.pointerEvents = 'none'; // Prevent double clicks
 
-    if (selectedAnswer === correctAnswer) {
+    let isCorrect = false;
+
+    if (selectedAnswer === item.a) {
         score++;
         selectedBtn.classList.add('correct');
+        isCorrect = true;
     } else {
         selectedBtn.classList.add('wrong');
+        // Highlight correct
         buttons.forEach(btn => {
-            if (btn.innerText === correctAnswer) {
+            if (btn.innerText === item.a) {
                 btn.classList.add('correct');
             }
         });
     }
 
-    buttons.forEach(btn => btn.disabled = true);
+    // Show Feedback
+    feedbackText.innerText = isCorrect 
+        ? `Correct! ${item.info}` 
+        : `Wrong. The correct answer is ${item.a}. ${item.info}`;
+    
+    feedbackBox.classList.add('show');
+    
+    // Auto-scroll to feedback on mobile
+    if(window.innerWidth < 600) {
+        feedbackBox.scrollIntoView({behavior: "smooth"});
+    }
+}
 
-    setTimeout(() => {
-        currentQuestionIndex++;
-        showQuestion();
-    }, 1500);
+function nextQuestion() {
+    currentQuestionIndex++;
+    showQuestion();
 }
 
 function endQuiz() {
@@ -413,15 +462,10 @@ function endQuiz() {
     finalScore.innerText = `${percentage}%`;
     progressFill.style.width = '100%';
 
-    if (percentage === 100) {
-        finalMessage.innerText = "Perfect! You're a Global Citizen!";
-    } else if (percentage >= 80) {
-        finalMessage.innerText = "Excellent! You know the world well.";
-    } else if (percentage >= 60) {
-        finalMessage.innerText = "Good job! A bit more reading on the regions.";
-    } else {
-        finalMessage.innerText = "Keep reviewing the contemporary world concepts.";
-    }
+    if (percentage === 100) finalMessage.innerText = "Perfect! You're a Global Citizen!";
+    else if (percentage >= 80) finalMessage.innerText = "Excellent! You know the world well.";
+    else if (percentage >= 60) finalMessage.innerText = "Good job! A bit more reading on the regions.";
+    else finalMessage.innerText = "Keep reviewing the contemporary world concepts.";
 }
 </script>
 
