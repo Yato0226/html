@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PATHFIT 2 Review Quiz</title>
+<style>
+body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
+.quiz-container { background: white; max-width: 600px; margin: 0 auto; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+h2 { color: #800000; text-align: center; } /* BulSU Red-ish color */
+.question { margin-bottom: 15px; font-weight: bold; }
+.options button { display: block; width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; background: #fff; cursor: pointer; text-align: left; border-radius: 5px; transition: 0.3s; }
+.options button:hover { background-color: #f0f0f0; }
+.feedback { margin-top: 10px; font-weight: bold; padding: 10px; border-radius: 5px; display: none; }
+.correct { background-color: #d4edda; color: #155724; border-color: #c3e6cb; }
+.incorrect { background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+.btn-next { display: none; width: 100%; padding: 10px; background-color: #333; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 15px; }
+.score-area { text-align: center; margin-top: 20px; font-size: 1.2em; display: none; }
+</style>
+</head>
+<body>
+<div class="quiz-container">
+<h2>PATHFIT 2 Review Quiz</h2>
+<div id="quiz-box">
+<div class="question" id="question-text"></div>
+<div class="options" id="options-container"></div>
+<div class="feedback" id="feedback"></div>
+<button class="btn-next" id="next-btn" onclick="nextQuestion()">Next Question</button>
+</div>
+<div class="score-area" id="score-area"></div>
+</div>
+<script>
+const questions = [
+{
+q: "What does the 'I' in the F.I.T.T. principle stand for?",
+options: ["Interval", "Intensity", "Impact", "Interaction"],
+answer: 1,
+explanation: "I stands for Intensity (how hard you exercise)."
+},
+{
+q: "Which principle states that you must increase the workload to see improvements?",
+options: ["Specificity", "Reversibility", "Overload", "Individuality"],
+answer: 2,
+explanation: "Overload means working the body harder than normal to force adaptation."
+},
+{
+q: "Push-ups primarily target which component of fitness?",
+options: ["Cardiovascular Endurance", "Flexibility", "Muscular Strength/Endurance", "Agility"],
+answer: 2,
+explanation: "Push-ups build muscular strength and endurance in the upper body."
+},
+{
+q: "Which movement pattern is primarily used in a Deadlift?",
+options: ["Squat", "Hinge", "Lunge", "Rotation"],
+answer: 1,
+explanation: "A deadlift is a hip-dominant movement, known as a Hinge."
+},
+{
+q: "What type of muscle contraction occurs when you hold a Plank position?",
+options: ["Concentric", "Eccentric", "Isometric", "Isokinetic"],
+answer: 2,
+explanation: "Isometric contractions occur when the muscle generates force without changing length (holding still)."
+},
+{
+q: "What is the estimated Maximum Heart Rate (MHR) for a 20-year-old student?",
+options: ["180 bpm", "190 bpm", "200 bpm", "220 bpm"],
+answer: 2,
+explanation: "Formula: 220 - Age. (220 - 20 = 200)."
+},
+{
+q: "Which activity is considered a 'Pull' movement?",
+options: ["Bench Press", "Squat", "Rowing", "Overhead Press"],
+answer: 2,
+explanation: "Rowing involves pulling weight toward the body."
+},
+{
+q: "Which fitness component refers to the range of motion available at a joint?",
+options: ["Agility", "Balance", "Flexibility", "Power"],
+answer: 2,
+explanation: "Flexibility defines how far a joint can move through its range of motion."
+}
+];
+
+let currentQuestion = 0;
+let score = 0;
+
+function loadQuestion() {
+const q = questions[currentQuestion];
+document.getElementById("question-text").innerText = (currentQuestion + 1) + ". " + q.q;
+const optionsDiv = document.getElementById("options-container");
+optionsDiv.innerHTML = "";
+
+q.options.forEach((opt, index) => {
+const btn = document.createElement("button");
+btn.innerText = opt;
+btn.onclick = () => checkAnswer(index, btn);
+optionsDiv.appendChild(btn);
+});
+
+document.getElementById("feedback").style.display = "none";
+document.getElementById("next-btn").style.display = "none";
+}
+
+function checkAnswer(selected, btnElement) {
+const q = questions[currentQuestion];
+const feedback = document.getElementById("feedback");
+const options = document.getElementById("options-container").children;
+
+for (let i = 0; i < options.length; i++) {
+options[i].disabled = true;
+}
+
+if (selected === q.answer) {
+score++;
+btnElement.style.backgroundColor = "#d4edda";
+feedback.innerHTML = "✅ Correct! " + q.explanation;
+feedback.className = "feedback correct";
+} else {
+btnElement.style.backgroundColor = "#f8d7da";
+options[q.answer].style.backgroundColor = "#d4edda";
+feedback.innerHTML = "❌ Incorrect. " + q.explanation;
+feedback.className = "feedback incorrect";
+}
+
+feedback.style.display = "block";
+document.getElementById("next-btn").style.display = "block";
+}
+
+function nextQuestion() {
+currentQuestion++;
+if (currentQuestion < questions.length) {
+loadQuestion();
+} else {
+showScore();
+}
+}
+
+function showScore() {
+document.getElementById("quiz-box").style.display = "none";
+const scoreArea = document.getElementById("score-area");
+scoreArea.style.display = "block";
+scoreArea.innerHTML = `<h3>You finished the quiz!</h3><p>Your Score: ${score} / ${questions.length}</p>`;
+if(score === questions.length) scoreArea.innerHTML += "<p>Perfect! You're ready for the exam!</p>";
+else if(score > questions.length / 2) scoreArea.innerHTML += "<p>Good job! Review the weak spots.</p>";
+else scoreArea.innerHTML += "<p>Keep reviewing the modules above.</p>";
+}
+
+// Initialize
+loadQuestion();
+</script>
+</body>
+</html>
