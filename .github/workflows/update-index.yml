@@ -1,4 +1,4 @@
-name: Pages Double Deploy + HTML Index
+name: Pages Build + HTML Index
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
   workflow_dispatch:
   schedule:
-    - cron: '0 2 * * 0' # weekly rebuild
+    - cron: '0 2 * * 0'
 
 permissions:
   contents: read
@@ -18,27 +18,15 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  double-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
 
-      # --- First deploy: just deploy existing HTML files ---
-      - name: First Deploy - Upload Pages Artifact
-        uses: actions/configure-pages@v4
-
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: .  # uploads all HTML files as-is
-
-      - uses: actions/deploy-pages@v4
-
-      # --- Generate/update html-files.json ---
       - name: Generate html-files.json
         run: |
           echo "Generating html-files.json..."
@@ -49,11 +37,10 @@ jobs:
           echo "Generated JSON:"
           cat html-files.json
 
-      # --- Second deploy: include updated JSON ---
-      - name: Second Deploy - Upload Pages Artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: .   # now includes html-files.json
+      - uses: actions/configure-pages@v4
 
-      - name: Deploy Pages with updated JSON
-        uses: actions/deploy-pages@v4
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .   # includes ALL HTML files + html-files.json
+
+      - uses: actions/deploy-pages@v4
