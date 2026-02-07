@@ -29,11 +29,13 @@ jobs:
 
       - name: Generate html-files.json
         run: |
-          find . -name "*.html" \
-            -not -path "./.github/*" \
-            | sed 's|^\./||' \
-            | sort \
-            | jq -R . | jq -s . > html-files.json
+          find . -name "*.html" -not -path "./.github/*" \
+          | sed 's|^\./||' \
+          | sort \
+          | jq -R . | jq -s . > html-files.json
+
+          echo "Generated:"
+          cat html-files.json
 
       - uses: actions/configure-pages@v4
 
