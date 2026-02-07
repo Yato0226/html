@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TCW Interactive Quiz</title>
+    <style>
+        :root {
+            /* TCW Green Theme */
+            --primary: #27ae60;
+            --accent: #2ecc71;
+            --success: #219150;
+            --error: #e74c3c;
+            --bg: #f4f4f9;
+            --text: #333;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 20px;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Header */
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        .header h1 { margin: 0; font-size: 1.5rem; }
+        .category-badge {
+            background: rgba(0,0,0,0.2);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-top: 10px;
+            display: inline-block;
+        }
+
+        /* Screens */
+        .screen { display: none; padding: 30px; flex: 1; }
+        .screen.active { display: flex; flex-direction: column; }
+
+        /* Start Screen */
+        .start-screen { text-align: center; justify-content: center; align-items: center; gap: 20px; }
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+        }
+        .btn:hover { transform: translateY(-2px); background: var(--accent); }
+
+        /* Quiz Screen */
+        .progress-bar {
+            height: 6px;
+            background: #eee;
+            width: 100%;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-weight: bold;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        .question-text {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+        .options-grid {
+            display: grid;
+            gap: 12px;
+        }
+        .option-btn {
+            background: white;
+            border: 2px solid #e0e0e0;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: left;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+            color: var(--text);
+        }
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--accent);
+            background: #f0fdf4;
+        }
+        .option-btn.correct {
+            background-color: #d4edda;
+            border-color: var(--success);
+            color: #155724;
+        }
+        .option-btn.wrong {
+            background-color: #f8d7da;
+            border-color: var(--error);
+            color: #721c24;
+        }
+        .option-btn:disabled {
+            cursor: default;
+            opacity: 0.7;
+        }
+
+        /* Result Screen */
+        .result-screen { text-align: center; justify-content: center; align-items: center; }
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 20px auto;
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
+        }
+        .message { margin-bottom: 30px; font-size: 1.2rem; color: #666; }
+
+        @media (max-width: 600px) {
+            .container { border-radius: 0; height: 100vh; }
+            .question-text { font-size: 1.1rem; }
+            .option-btn { padding: 12px; font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>TCW Comprehensive Reviewer</h1>
+            <span id="categoryBadge" class="category-badge" style="display:none">General</span>
+        </div>
+
+        <div class="progress-bar">
+            <div id="progressFill" class="progress-fill"></div>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="startScreen" class="screen active start-screen">
+            <h2>The Contemporary World</h2>
+            <p>Reviewing Global Divides, Asian Regionalism, Religion, and Digital Divides.</p>
+            <button class="btn" onclick="startQuiz()">Start Quiz</button>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quizScreen" class="screen">
+            <div class="stats">
+                <span id="questionCount">Question 1/10</span>
+                <span id="scoreDisplay">Score: 0</span>
+            </div>
+            <div id="questionText" class="question-text">
+                Question goes here?
+            </div>
+            <div id="optionsGrid" class="options-grid">
+                <!-- Options injected by JS -->
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="resultScreen" class="screen result-screen">
+            <h2>Quiz Completed!</h2>
+            <div class="score-circle">
+                <span id="finalScore">0%</span>
+            </div>
+            <p id="finalMessage" class="message">Great job!</p>
+            <button class="btn" onclick="startQuiz()">Retake Quiz</button>
+        </div>
+    </div>
+
+<script>
+// --- TCW DATA SOURCE ---
+const rawData = [
+    { category: "Global Divides", q: "Who originally coined the term 'Global South' in 1969?", a: "Carl Oglesby : American political activist who used the term to describe countries dominated by the North." },
+    { category: "Global Divides", q: "What is the 'Brandt Line'?", a: "Brandt Line : An imaginary line proposed in the 1980s visually depicting the North-South divide based on GDP per capita." },
+    { category: "Global Divides", q: "Which hemisphere contains most of the 'Global North' countries?", a: "Northern Hemisphere : Home to richer, developed nations (except Australia/NZ)." },
+    { category: "Global Divides", q: "What is the primary characteristic of the 'Global South'?", a: "Developing/Agrarian : Economies often characterized by poverty, post-colonialism, and instability." },
+    { category: "Global Divides", q: "Which countries are exceptions located in the Southern Hemisphere but considered 'Global North'?", a: "Australia and New Zealand : Wealthy nations located below the Brandt Line." },
+    { category: "Global Divides", q: "What does the 'Third World' term historically refer to?", a: "Non-Aligned Movement : Countries that were not aligned with NATO (First World) or the Communist Bloc (Second World) during the Cold War." },
+    { category: "Global Divides", q: "What percentage of the world population lives in the Global South?", a: "Three-Quarters (75%) : The majority of the world's population resides in developing nations." },
+    { category: "Global Divides", q: "What are the key problems faced by the Global North?", a: "Overconsumption and Aging : Issues like food wastage, expensive healthcare, and zero population growth." },
+    { category: "Global Divides", q: "What is 'Neocolonialism'?", a: "Neocolonialism : The use of economic, political, cultural, or other pressures to control or influence other countries, especially former dependencies." },
+    { category: "Global Divides", q: "What is the 'Human Development Index' (HDI)?", a: "HDI : A measure of progress that includes life expectancy, education, and income, not just economic development." },
+    { category: "Asian Regionalism", q: "What does 'ASEAN' stand for?", a: "ASEAN : Association of Southeast Asian Nations." },
+    { category: "Asian Regionalism", q: "When was ASEAN established?", a: "1967 : The year ASEAN was formed." },
+    { category: "Asian Regionalism", q: "What are the three pillars of the ASEAN Community?", a: "Political-Security, Economic, Socio-Cultural : The three supporting pillars of ASEAN integration." },
+    { category: "Asian Regionalism", q: "What is the goal of the ASEAN Economic Community (AEC)?", a: "Single Market : To create a highly integrated economy with free flow of goods, services, and skilled labor." },
+    { category: "Asian Regionalism", q: "What is 'AFTA'?", a: "AFTA : ASEAN Free Trade Area, signed in 1992 to eliminate tariffs." },
+    { category: "Asian Regionalism", q: "What is the 'ASEAN Way'?", a: "ASEAN Way : A style of diplomacy based on non-interference, consensus-building, and peaceful conflict resolution." },
+    { category: "Asian Regionalism", q: "Which pillar focuses on human rights, justice, and regional peace?", a: "APSC (ASEAN Political-Security Community) : Envisions a rules-based and inclusive community." },
+    { category: "Asian Regionalism", q: "Which pillar focuses on culture, arts, and poverty eradication?", a: "ASCC (ASEAN Socio-Cultural Community) : Committed to lifting the quality of life and fostering ASEAN identity." },
+    { category: "Asian Regionalism", q: "What is 'Regionalism'?", a: "Regionalism : The process of dividing an area into smaller segments called regions (or the theory/practice of coordinating social, economic, or political activities within a region)." },
+    { category: "Asian Regionalism", q: "What is 'Regionalization'?", a: "Regionalization : The actual growth of societal integration within a region and the often undirected process of social and economic interaction." },
+    { category: "Religion", q: "What is 'Glocalization of Religion'?", a: "Glocalization : The practice of mixing universal religious beliefs with local/unfamiliar practices (Universal + Local)." },
+    { category: "Religion", q: "What is 'Vernacularization' in religion?", a: "Vernacularization : Blending religious universalism with specific native languages (e.g., Arabic in Islam)." },
+    { category: "Religion", q: "What is 'Indigenization' in religion?", a: "Indigenization : Blending religious universalism with local particularism by adopting local rituals and ethnicity." },
+    { category: "Religion", q: "What is 'Secularization'?", a: "Secularization : The transformation of a society from close identification with religious values to nonreligious values." },
+    { category: "Religion", q: "Who defined religion as a 'search for significance related to the sacred'?", a: "Kenneth Pargament : A psychologist who distinguishes religion from spirituality." },
+    { category: "Religion", q: "What are the three essential elements of religion?", a: "Observable phenomenon, Organized system, Sacredness : The core components defined in social sciences." },
+    { category: "Religion", q: "How does globalization affect religion?", a: "Circulation : It allows religions and practices to circulate worldwide via migration and internet." },
+    { category: "Religion", q: "What is 'Religious Coping'?", a: "Religious Coping : Using religion as a psychological shield/mechanism to battle life's challenges." },
+    { category: "Religion", q: "What major religions identify the majority of the world's 5.8 billion believers?", a: "Christians, Muslims, Hindus : The three largest religious groups." },
+    { category: "Religion", q: "What concept opposes the 'demise of religion' theory?", a: "Desecularization (or Resurgence) : The counter-trend where religion remains relevant despite modernization." },
+    { category: "Digital Divide", q: "What is the 'Digital Divide'?", a: "Digital Divide : The gap between individuals/communities who have access to ICT and those who do not." },
+    { category: "Digital Divide", q: "What is the 'Access Divide'?", a: "Access Divide : Disparities in the physical ability to connect to the internet or own devices." },
+    { category: "Digital Divide", q: "What is the 'Skills Divide'?", a: "Skills Divide : Differences in digital literacy or the ability to navigate technology effectively." },
+    { category: "Digital Divide", q: "What is the 'Homework Gap'?", a: "Homework Gap : The struggle school-age children face when they cannot complete assignments due to lack of home internet." },
+    { category: "Digital Divide", q: "Which demographic often faces a 'Skills Divide'?", a: "Older Adults (Elderly) : Often have devices but feel overwhelmed or lack confidence in using them." },
+    { category: "Digital Divide", q: "How does the Digital Divide affect healthcare?", a: "Telehealth Access : Patients without access cannot use online portals or telehealth services, missing medical info." },
+    { category: "Digital Divide", q: "What does 'ICT' stand for?", a: "ICT : Information and Communication Technology." },
+    { category: "Digital Divide", q: "What is 'Digital Literacy'?", a: "Digital Literacy : The ability to find, evaluate, and compose information through various digital platforms." },
+    { category: "Digital Divide", q: "What is the 'Usage Divide'?", a: "Usage Divide : How people use technology differently based on socioeconomic status (e.g., entertainment vs. education)." },
+    { category: "Digital Divide", q: "Why do rural communities often face infrastructure gaps?", a: "Profitability : Installing broadband in sparsely populated areas is less profitable for providers." },
+    { category: "Culture", q: "What is 'Culturalism'?", a: "Culturalism : The idea that individuals are determined by their culture." },
+    { category: "Culture", q: "What is 'Multiculturalism'?", a: "Multiculturalism : The presence of, or support for the presence of, several distinct cultural or ethnic groups within a society." },
+    { category: "Culture", q: "What is the 'Melting Pot' theory?", a: "Melting Pot : Metaphor for a heterogeneous society becoming more homogeneous (assimilation)." },
+    { category: "Culture", q: "What is the 'Salad Bowl' theory?", a: "Salad Bowl : Cultures mix but retain their unique distinctions (integration without total assimilation)." },
+    { category: "Culture", q: "What is 'Cultural Imperialism'?", a: "Cultural Imperialism : The imposition of one culture's values and beliefs upon another culture." },
+    { category: "Culture", q: "What is 'Cultural Hybridity'?", a: "Cultural Hybridity : The blending of elements from different cultures to create something new." },
+    { category: "Culture", q: "What is 'Ethnocentrism'?", a: "Ethnocentrism : Evaluating other cultures according to the standards of one's own culture." },
+    { category: "Culture", q: "What is 'Cultural Relativism'?", a: "Cultural Relativism : The principle that an individual's beliefs and activities should be understood in terms of their own culture." },
+    { category: "Culture", q: "What is 'McDonaldization'?", a: "McDonaldization : The process by which the principles of the fast-food restaurant are coming to dominate sectors of society." },
+    { category: "Culture", q: "What is 'Heterogenization' in globalization?", a: "Heterogenization : The view that globalization enables the maintenance and strengthening of local cultural distinctions." },
+    { category: "World of Ideas", q: "What is 'Global Media'?", a: "Global Media : Forms of mass communication that reach across the world." },
+    { category: "World of Ideas", q: "What is the 'Global Village'?", a: "Global Village : Marshall McLuhan's term for the world considered as a single community linked by telecommunications." },
+    { category: "World of Ideas", q: "What is 'Media Imperialism'?", a: "Media Imperialism : A theory stating that smaller countries lose their identity due to the dominance of media from larger nations." },
+    { category: "World of Ideas", q: "What is 'Cyberbalkanization' (or Splinternet)?", a: "Cyberbalkanization : The segregation of the Internet into smaller groups with similar interests, preventing open discourse." },
+    { category: "World of Ideas", q: "What is 'Fake News'?", a: "Fake News : False or misleading information presented as news." },
+    { category: "World of Ideas", q: "What is 'Information Society'?", a: "Information Society : A society where the creation, distribution, and manipulation of information is a significant economic and cultural activity." },
+    { category: "World of Ideas", q: "What is 'Echo Chamber'?", a: "Echo Chamber : An environment where a person only encounters information or opinions that reflect and reinforce their own." },
+    { category: "World of Ideas", q: "What is 'Soft Power'?", a: "Soft Power : The ability to shape the preferences of others through appeal and attraction (culture, values) rather than coercion." },
+    { category: "World of Ideas", q: "What is 'Cultural Homogenization'?", a: "Homogenization : The reduction in cultural diversity through the popularization and diffusion of a wide array of cultural symbols." },
+    { category: "World of Ideas", q: "What is the role of 'Social Media' in globalization?", a: "Connectivity : It accelerates the flow of ideas and information, connecting people instantly across borders." },
+    { category: "Misc", q: "What is 'Globalization'?", a: "Globalization : The expansion and intensification of social relations and consciousness across world-time and world-space." },
+    { category: "Misc", q: "What is 'Economic Globalization'?", a: "Economic Globalization : The increasing integration of economies around the world, particularly through the movement of goods, services, and capital." },
+    { category: "Misc", q: "What is 'Outsourcing'?", a: "Outsourcing : Obtaining goods or services from an outside or foreign supplier." },
+    { category: "Misc", q: "What is 'Offshoring'?", a: "Offshoring : The practice of basing some of a company's processes or services overseas to take advantage of lower costs." },
+    { category: "Misc", q: "What is the 'World Bank'?", a: "World Bank : An international financial institution that provides loans and grants to the governments of low- and middle-income countries." },
+    { category: "Misc", q: "What is the 'IMF'?", a: "IMF : International Monetary Fund; works to foster global monetary cooperation and secure financial stability." },
+    { category: "Misc", q: "What is the 'WTO'?", a: "WTO : World Trade Organization; the only global international organization dealing with the rules of trade between nations." },
+    { category: "Misc", q: "What is 'Sustainable Development'?", a: "Sustainable Development : Development that meets the needs of the present without compromising the ability of future generations to meet their own needs." },
+    { category: "Misc", q: "What are 'TNCs'?", a: "TNCs : Transnational Corporations; companies that operate in more than one country." },
+    { category: "Misc", q: "What is 'Migration'?", a: "Migration : The movement of people from one place to another with the intentions of settling, permanently or temporarily." }
+];
+
+// --- APP STATE ---
+let quizPool = [];
+let currentQuestionIndex = 0;
+let score = 0;
+let isAnswered = false;
+
+// --- DOM ELEMENTS ---
+const startScreen = document.getElementById('startScreen');
+const quizScreen = document.getElementById('quizScreen');
+const resultScreen = document.getElementById('resultScreen');
+
+const questionText = document.getElementById('questionText');
+const optionsGrid = document.getElementById('optionsGrid');
+const questionCount = document.getElementById('questionCount');
+const scoreDisplay = document.getElementById('scoreDisplay');
+const categoryBadge = document.getElementById('categoryBadge');
+const progressFill = document.getElementById('progressFill');
+const finalScore = document.getElementById('finalScore');
+const finalMessage = document.getElementById('finalMessage');
+
+// --- UTILITIES ---
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+// Get 3 wrong answers, preferably from the same category
+function getDistractors(correctItem) {
+    let sameCategory = rawData.filter(item => 
+        item.category === correctItem.category && item.a !== correctItem.a
+    );
+    
+    let differentCategory = rawData.filter(item => 
+        item.category !== correctItem.category
+    );
+
+    let distractors = [];
+
+    // Try to get 2 or 3 from same category for difficulty
+    shuffleArray(sameCategory);
+    distractors.push(...sameCategory.slice(0, 3));
+
+    // Fill with others if not enough
+    if (distractors.length < 3) {
+        shuffleArray(differentCategory);
+        distractors.push(...differentCategory.slice(0, 3 - distractors.length));
+    }
+    
+    return distractors.slice(0, 3).map(d => d.a);
+}
+
+// --- GAME LOGIC ---
+
+function startQuiz() {
+    quizPool = shuffleArray([...rawData]); // Shuffle all
+    currentQuestionIndex = 0;
+    score = 0;
+    isAnswered = false;
+
+    startScreen.classList.remove('active');
+    resultScreen.classList.remove('active');
+    quizScreen.classList.add('active');
+    
+    showQuestion();
+}
+
+function showQuestion() {
+    if (currentQuestionIndex >= quizPool.length) {
+        endQuiz();
+        return;
+    }
+
+    const item = quizPool[currentQuestionIndex];
+    isAnswered = false;
+
+    // UI Updates
+    questionCount.innerText = `Question ${currentQuestionIndex + 1} / ${quizPool.length}`;
+    scoreDisplay.innerText = `Score: ${score}`;
+    categoryBadge.innerText = item.category;
+    categoryBadge.style.display = 'inline-block';
+    
+    const progressPercent = ((currentQuestionIndex) / quizPool.length) * 100;
+    progressFill.style.width = `${progressPercent}%`;
+
+    questionText.innerText = item.q;
+
+    // Options
+    const distractors = getDistractors(item);
+    const options = [item.a, ...distractors];
+    shuffleArray(options);
+
+    optionsGrid.innerHTML = '';
+    options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerText = opt;
+        btn.onclick = () => handleAnswer(btn, opt, item.a);
+        optionsGrid.appendChild(btn);
+    });
+}
+
+function handleAnswer(selectedBtn, selectedAnswer, correctAnswer) {
+    if (isAnswered) return;
+    isAnswered = true;
+
+    const buttons = optionsGrid.querySelectorAll('.option-btn');
+
+    if (selectedAnswer === correctAnswer) {
+        score++;
+        selectedBtn.classList.add('correct');
+    } else {
+        selectedBtn.classList.add('wrong');
+        buttons.forEach(btn => {
+            if (btn.innerText === correctAnswer) {
+                btn.classList.add('correct');
+            }
+        });
+    }
+
+    buttons.forEach(btn => btn.disabled = true);
+
+    setTimeout(() => {
+        currentQuestionIndex++;
+        showQuestion();
+    }, 1500);
+}
+
+function endQuiz() {
+    quizScreen.classList.remove('active');
+    resultScreen.classList.add('active');
+
+    const percentage = Math.round((score / quizPool.length) * 100);
+    finalScore.innerText = `${percentage}%`;
+    progressFill.style.width = '100%';
+
+    if (percentage === 100) {
+        finalMessage.innerText = "Perfect! You're a Global Citizen!";
+    } else if (percentage >= 80) {
+        finalMessage.innerText = "Excellent! You know the world well.";
+    } else if (percentage >= 60) {
+        finalMessage.innerText = "Good job! A bit more reading on the regions.";
+    } else {
+        finalMessage.innerText = "Keep reviewing the contemporary world concepts.";
+    }
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STS Interactive Quiz</title>
+    <style>
+        :root {
+            /* STS Purple Theme */
+            --primary: #8e44ad;
+            --accent: #9b59b6;
+            --success: #27ae60;
+            --error: #c0392b;
+            --bg: #f3e5f5;
+            --text: #2c3e50;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 20px;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Header */
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        .header h1 { margin: 0; font-size: 1.5rem; }
+        .category-badge {
+            background: rgba(0,0,0,0.2);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-top: 10px;
+            display: inline-block;
+        }
+
+        /* Screens */
+        .screen { display: none; padding: 30px; flex: 1; }
+        .screen.active { display: flex; flex-direction: column; }
+
+        /* Start Screen */
+        .start-screen { text-align: center; justify-content: center; align-items: center; gap: 20px; }
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+        }
+        .btn:hover { transform: translateY(-2px); background: var(--accent); }
+
+        /* Quiz Screen */
+        .progress-bar {
+            height: 6px;
+            background: #eee;
+            width: 100%;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-weight: bold;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        .question-text {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+        .options-grid {
+            display: grid;
+            gap: 12px;
+        }
+        .option-btn {
+            background: white;
+            border: 2px solid #e0e0e0;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: left;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+            color: var(--text);
+        }
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--accent);
+            background: #f3e5f5;
+        }
+        .option-btn.correct {
+            background-color: #d4edda;
+            border-color: var(--success);
+            color: #155724;
+        }
+        .option-btn.wrong {
+            background-color: #f8d7da;
+            border-color: var(--error);
+            color: #721c24;
+        }
+        .option-btn:disabled {
+            cursor: default;
+            opacity: 0.7;
+        }
+
+        /* Result Screen */
+        .result-screen { text-align: center; justify-content: center; align-items: center; }
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 20px auto;
+            box-shadow: 0 5px 15px rgba(142, 68, 173, 0.4);
+        }
+        .message { margin-bottom: 30px; font-size: 1.2rem; color: #666; }
+
+        @media (max-width: 600px) {
+            .container { border-radius: 0; height: 100vh; }
+            .question-text { font-size: 1.1rem; }
+            .option-btn { padding: 12px; font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>STS Comprehensive Reviewer</h1>
+            <span id="categoryBadge" class="category-badge" style="display:none">General</span>
+        </div>
+
+        <div class="progress-bar">
+            <div id="progressFill" class="progress-fill"></div>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="startScreen" class="screen active start-screen">
+            <h2>Science, Technology & Society</h2>
+            <p>Covering History, Intellectual Revolutions, Mesoamerica, and Filipino Inventions.</p>
+            <button class="btn" onclick="startQuiz()">Start Quiz</button>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quizScreen" class="screen">
+            <div class="stats">
+                <span id="questionCount">Question 1/10</span>
+                <span id="scoreDisplay">Score: 0</span>
+            </div>
+            <div id="questionText" class="question-text">
+                Question goes here?
+            </div>
+            <div id="optionsGrid" class="options-grid">
+                <!-- Options injected by JS -->
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="resultScreen" class="screen result-screen">
+            <h2>Quiz Completed!</h2>
+            <div class="score-circle">
+                <span id="finalScore">0%</span>
+            </div>
+            <p id="finalMessage" class="message">Great job!</p>
+            <button class="btn" onclick="startQuiz()">Retake Quiz</button>
+        </div>
+    </div>
+
+<script>
+// --- STS DATA SOURCE ---
+const rawData = [
+    // --- MODULE 1: ANCIENT/MIDDLE/MODERN ---
+    { category: "Ancient Times", q: "Which civilization invented the cuneiform writing system?", a: "Sumerian : Utilizes word pictures and triangular symbols carved on clay." },
+    { category: "Ancient Times", q: "Which civilization introduced the 360-day calendar and the sexagesimal number system?", a: "Sumerian : Basis for 360 degrees in a circle and 60-minute hours." },
+    { category: "Ancient Times", q: "Who were the pioneers that explained the existence of the universe and built the pyramids?", a: "Egyptians : Known for hieroglyphs, papyrus, and the 365-day solar calendar." },
+    { category: "Ancient Times", q: "Which civilization invented the alarm clock using water?", a: "Greek : They also created windmills for agricultural processing." },
+    { category: "Ancient Times", q: "Which civilization produced the first newspaper called the 'Gazette'?", a: "Roman : Engraved on metal/stone tablets." },
+    { category: "Ancient Times", q: "What was the first book or codex made of?", a: "Papyrus pages bound with animal skin : Developed by the Roman Empire." },
+    { category: "Ancient Times", q: "Which civilization is credited with the invention of silk, tea, and gunpowder?", a: "Chinese : The oldest civilization in Asia." },
+    { category: "Middle Ages", q: "Who invented the printing press using cast type?", a: "Johannes Gutenberg : Addressed the need for publishing books to spread information." },
+    { category: "Middle Ages", q: "Who developed the compound microscope?", a: "Zacharias Janssen : Guided by principles of eyeglasses." },
+    { category: "Middle Ages", q: "Who improved the telescope and supported the heliocentric theory?", a: "Galileo Galilei : Discovered moons of Jupiter and phases of Venus." },
+    { category: "Modern Times", q: "Who invented the process of heating dairy to kill harmful bacteria?", a: "Louis Pasteur : The process is called Pasteurization." },
+    { category: "Modern Times", q: "Who was awarded the first patent for the electric telephone in 1876?", a: "Alexander Graham Bell : Revolutionized global communication." },
+    { category: "Modern Times", q: "Who discovered Penicillin?", a: "Alexander Fleming : Discovered in 1928 from a mold called Penicillium." },
+    { category: "Modern Times", q: "Who invented kerosene by refining petroleum?", a: "Samuel M. Kier : Kerosene was also called 'illuminating oil'." },
+
+    // --- MODULE 2: MESOAMERICA ---
+    { category: "Mesoamerica", q: "Which civilization built the El Castillo pyramid with 365 steps?", a: "Maya : Located at Chichen Itza." },
+    { category: "Mesoamerica", q: "What is the 'Haab'?", a: "Maya Civil Calendar : 365-day cycle composed of 18 months of 20 days plus a 5-day month." },
+    { category: "Mesoamerica", q: "What is the 'Tzolk’in'?", a: "Maya Sacred Calendar : 260-day cycle used for religious rituals." },
+    { category: "Mesoamerica", q: "Which civilization is known for being the first to produce rubber products?", a: "Maya : 3,000 years before Goodyear." },
+    { category: "Mesoamerica", q: "What are 'Chinampas'?", a: "Artificial Islands : Floating gardens used by the Aztecs for agriculture." },
+    { category: "Mesoamerica", q: "Which civilization used cacao beans as currency?", a: "Aztec : Also known for their tribute system and military power." },
+    { category: "Mesoamerica", q: "What is 'Quipu'?", a: "Knotted Strings : Used by the Incas for recording information (since they had no writing system)." },
+    { category: "Mesoamerica", q: "Which civilization built Machu Picchu?", a: "Inca : Known for advanced stone architecture without mortar." },
+    { category: "Mesoamerica", q: "What is the 'Sun Stone'?", a: "Aztec Calendar Stone : A massive basalt sculpture representing the death of the sun god Tonatiuh." },
+    { category: "Mesoamerica", q: "Which civilization practiced mandatory education for all children?", a: "Aztec : Divided into Telpochcalli (commoners) and Calmecac (nobles)." },
+    
+    // --- MODULE 3: INTELLECTUAL REVOLUTIONS ---
+    { category: "Intellectual Rev", q: "Who proposed the Heliocentrism theory (Sun-centered universe)?", a: "Nicolaus Copernicus : Challenged the Geocentric view." },
+    { category: "Intellectual Rev", q: "What is the title of Copernicus' groundbreaking book?", a: "De Revolutionibus Orbium Coelestium : On the Revolutions of the Heavenly Spheres." },
+    { category: "Intellectual Rev", q: "Who wrote 'The Origin of Species'?", a: "Charles Darwin : Introduced the theory of evolution by natural selection." },
+    { category: "Intellectual Rev", q: "Which islands inspired Darwin's theory of evolution?", a: "Galapagos Islands : Where he studied finches and tortoises." },
+    { category: "Intellectual Rev", q: "What is 'Natural Selection'?", a: "Survival of the Fittest : Organisms better adapted to their environment tend to survive and produce offspring." },
+    { category: "Intellectual Rev", q: "Who is the father of Psychoanalysis?", a: "Sigmund Freud : Divided the mind into Id, Ego, and Superego." },
+    { category: "Intellectual Rev", q: "What is the 'Id'?", a: "Pleasure Principle : The primitive, instinctual part of the mind seeking immediate gratification." },
+    { category: "Intellectual Rev", q: "What is the 'Ego'?", a: "Reality Principle : The mediator between the Id and the real world." },
+    { category: "Intellectual Rev", q: "What is the 'Superego'?", a: "Moral Conscience : Represents internalized ideals and standards." },
+    { category: "Intellectual Rev", q: "What is the 'Oedipus Complex'?", a: "Phallic Stage : A child's unconscious desire for the opposite-sex parent and rivalry with the same-sex parent." },
+
+    // --- FILIPINO INVENTIONS ---
+    { category: "Filipino Inventions", q: "Who invented the bamboo incubator?", a: "Dr. Fe del Mundo : The first woman recognized as a National Scientist in the Philippines." },
+    { category: "Filipino Inventions", q: "Who discovered Erythromycin?", a: "Dr. Abelardo B. Aguilar : Found in soil samples from his backyard (Iloilo)." },
+    { category: "Filipino Inventions", q: "Who invented the two-way television telephone or videophone?", a: "Dr. Gregorio Zara : A physicist and engineer." },
+    { category: "Filipino Inventions", q: "Who created the first artificial reef used for fisheries in Southeast Asia?", a: "Dr. Angel C. Alcala : Known for coral reef rehabilitation." },
+    { category: "Filipino Inventions", q: "Who developed the mango flower induction technology?", a: "Dr. Ramon C. Barba : Allowed mangoes to be available year-round." },
+    { category: "Filipino Inventions", q: "Who invented Banana Ketchup and the Palayok Oven?", a: "Maria Y. Orosa : A pioneering food technologist and chemist." },
+    { category: "Filipino Inventions", q: "Who is the 'Father of Filipino Inventors' known for the meat grinder and coconut grater?", a: "Benjamin Almeda Sr. : Invented various food processing machines." },
+    { category: "Filipino Inventions", q: "Who developed the first single-chip graphical user interface accelerator?", a: "Diosdado Banatao : Made computers work much faster." },
+    { category: "Filipino Inventions", q: "Who invented Quink Ink?", a: "Francisco Quisumbing : A Filipino chemist." },
+    { category: "Filipino Inventions", q: "Who invented the Karaoke Sing Along System (SAS)?", a: "Roberto Del Rosario : Patented the system used worldwide." },
+    { category: "Filipino Inventions", q: "Who invented the formula for 'pure alcohol' from tuba?", a: "Anacleto S. Del Rosario : Father of Philippine Science and Laboratory." },
+    { category: "Filipino Inventions", q: "Who developed the Super Bunker Formula-L (fuel from water)?", a: "Rudy Lantano Sr. : A revolutionary fuel half-composed of water." }
+];
+
+// --- APP STATE ---
+let quizPool = [];
+let currentQuestionIndex = 0;
+let score = 0;
+let isAnswered = false;
+
+// --- DOM ELEMENTS ---
+const startScreen = document.getElementById('startScreen');
+const quizScreen = document.getElementById('quizScreen');
+const resultScreen = document.getElementById('resultScreen');
+
+const questionText = document.getElementById('questionText');
+const optionsGrid = document.getElementById('optionsGrid');
+const questionCount = document.getElementById('questionCount');
+const scoreDisplay = document.getElementById('scoreDisplay');
+const categoryBadge = document.getElementById('categoryBadge');
+const progressFill = document.getElementById('progressFill');
+const finalScore = document.getElementById('finalScore');
+const finalMessage = document.getElementById('finalMessage');
+
+// --- UTILITIES ---
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+// Get 3 wrong answers
+function getDistractors(correctItem) {
+    // Try to find distractors from the same category first
+    let sameCategory = rawData.filter(item => 
+        item.category === correctItem.category && item.a !== correctItem.a
+    );
+    
+    // Fallback to different categories
+    let differentCategory = rawData.filter(item => 
+        item.category !== correctItem.category
+    );
+
+    let distractors = [];
+
+    // Prioritize same category
+    shuffleArray(sameCategory);
+    distractors.push(...sameCategory.slice(0, 3));
+
+    // Fill with others if not enough
+    if (distractors.length < 3) {
+        shuffleArray(differentCategory);
+        distractors.push(...differentCategory.slice(0, 3 - distractors.length));
+    }
+    
+    return distractors.slice(0, 3).map(d => d.a);
+}
+
+// --- GAME LOGIC ---
+
+function startQuiz() {
+    quizPool = shuffleArray([...rawData]); // Shuffle all
+    currentQuestionIndex = 0;
+    score = 0;
+    isAnswered = false;
+
+    startScreen.classList.remove('active');
+    resultScreen.classList.remove('active');
+    quizScreen.classList.add('active');
+    
+    showQuestion();
+}
+
+function showQuestion() {
+    if (currentQuestionIndex >= quizPool.length) {
+        endQuiz();
+        return;
+    }
+
+    const item = quizPool[currentQuestionIndex];
+    isAnswered = false;
+
+    // UI Updates
+    questionCount.innerText = `Question ${currentQuestionIndex + 1} / ${quizPool.length}`;
+    scoreDisplay.innerText = `Score: ${score}`;
+    categoryBadge.innerText = item.category;
+    categoryBadge.style.display = 'inline-block';
+    
+    const progressPercent = ((currentQuestionIndex) / quizPool.length) * 100;
+    progressFill.style.width = `${progressPercent}%`;
+
+    questionText.innerText = item.q;
+
+    // Options
+    const distractors = getDistractors(item);
+    const options = [item.a, ...distractors];
+    shuffleArray(options);
+
+    optionsGrid.innerHTML = '';
+    options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerText = opt;
+        btn.onclick = () => handleAnswer(btn, opt, item.a);
+        optionsGrid.appendChild(btn);
+    });
+}
+
+function handleAnswer(selectedBtn, selectedAnswer, correctAnswer) {
+    if (isAnswered) return;
+    isAnswered = true;
+
+    const buttons = optionsGrid.querySelectorAll('.option-btn');
+
+    if (selectedAnswer === correctAnswer) {
+        score++;
+        selectedBtn.classList.add('correct');
+    } else {
+        selectedBtn.classList.add('wrong');
+        // Highlight correct one
+        buttons.forEach(btn => {
+            if (btn.innerText === correctAnswer) {
+                btn.classList.add('correct');
+            }
+        });
+    }
+
+    buttons.forEach(btn => btn.disabled = true);
+
+    setTimeout(() => {
+        currentQuestionIndex++;
+        showQuestion();
+    }, 1500);
+}
+
+function endQuiz() {
+    quizScreen.classList.remove('active');
+    resultScreen.classList.add('active');
+
+    const percentage = Math.round((score / quizPool.length) * 100);
+    finalScore.innerText = `${percentage}%`;
+    progressFill.style.width = '100%';
+
+    if (percentage === 100) {
+        finalMessage.innerText = "Perfect! You're a true Scientist!";
+    } else if (percentage >= 80) {
+        finalMessage.innerText = "Excellent! You know your history and tech.";
+    } else if (percentage >= 60) {
+        finalMessage.innerText = "Good job! A quick review and you're set.";
+    } else {
+        finalMessage.innerText = "Keep reviewing the modules!";
+    }
+}
+</script>
+
+</body>
+</html>

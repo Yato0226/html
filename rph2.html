@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPH Interactive Quiz</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --success: #27ae60;
+            --error: #e74c3c;
+            --bg: #f4f4f9;
+            --text: #333;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 20px;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Header */
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        .header h1 { margin: 0; font-size: 1.5rem; }
+        .category-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-top: 10px;
+            display: inline-block;
+        }
+
+        /* Screens */
+        .screen { display: none; padding: 30px; flex: 1; }
+        .screen.active { display: flex; flex-direction: column; }
+
+        /* Start Screen */
+        .start-screen { text-align: center; justify-content: center; align-items: center; gap: 20px; }
+        .btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+        }
+        .btn:hover { transform: translateY(-2px); background: #2980b9; }
+
+        /* Quiz Screen */
+        .progress-bar {
+            height: 6px;
+            background: #eee;
+            width: 100%;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-weight: bold;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        .question-text {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+        .options-grid {
+            display: grid;
+            gap: 12px;
+        }
+        .option-btn {
+            background: white;
+            border: 2px solid #e0e0e0;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: left;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+            color: var(--text);
+        }
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--accent);
+            background: #f8fbff;
+        }
+        .option-btn.correct {
+            background-color: #d4edda;
+            border-color: var(--success);
+            color: #155724;
+        }
+        .option-btn.wrong {
+            background-color: #f8d7da;
+            border-color: var(--error);
+            color: #721c24;
+        }
+        .option-btn:disabled {
+            cursor: default;
+            opacity: 0.7;
+        }
+
+        /* Result Screen */
+        .result-screen { text-align: center; justify-content: center; align-items: center; }
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 20px auto;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+        .message { margin-bottom: 30px; font-size: 1.2rem; color: #666; }
+
+        @media (max-width: 600px) {
+            .container { border-radius: 0; height: 100vh; }
+            .question-text { font-size: 1.1rem; }
+            .option-btn { padding: 12px; font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>RPH Comprehensive Reviewer</h1>
+            <span id="categoryBadge" class="category-badge" style="display:none">General</span>
+        </div>
+
+        <div class="progress-bar">
+            <div id="progressFill" class="progress-fill"></div>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="startScreen" class="screen active start-screen">
+            <h2>Ready to review?</h2>
+            <p>100+ items covering Historiography, Magellan, and Plasencia.</p>
+            <button class="btn" onclick="startQuiz()">Start Quiz</button>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quizScreen" class="screen">
+            <div class="stats">
+                <span id="questionCount">Question 1/10</span>
+                <span id="scoreDisplay">Score: 0</span>
+            </div>
+            <div id="questionText" class="question-text">
+                Question goes here?
+            </div>
+            <div id="optionsGrid" class="options-grid">
+                <!-- Options injected by JS -->
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="resultScreen" class="screen result-screen">
+            <h2>Quiz Completed!</h2>
+            <div class="score-circle">
+                <span id="finalScore">0%</span>
+            </div>
+            <p id="finalMessage" class="message">Great job!</p>
+            <button class="btn" onclick="startQuiz()">Retake Quiz</button>
+        </div>
+    </div>
+
+<script>
+// --- DATA SOURCE ---
+const rawData = [
+    { category: "Historiography", q: "What is the Greek word for History which means inquiry or investigation?", a: "Historia : Ang salitang Griyego na nangangahulugang pag-uusisa at pagsisiyasat." },
+    { category: "Historiography", q: "How does Aristotle define History according to Louis Gottschalk?", a: "History : Isang maayos na pagtatala gamit ang mga pangyayari o penomenon maging ito man ay sunodsunod o hindi." },
+    { category: "Historiography", q: "Who stated 'A generation which ignores history has no past - and no future'?", a: "Robert Heinlein : A generation which ignores history has no past - and no future." },
+    { category: "Historiography", q: "What is the Filipino definition of Kasaysayan?", a: "Kasaysayan : Salaysay ukol sa nakaraan na may saysay para sa sariling grupo na isinasalaysay gamit ang sariling wika." },
+    { category: "Historiography", q: "What does the root word 'Saysay' mean?", a: "Saysay : Mahalaga, may kwenta, importante." },
+    { category: "Historiography", q: "What does the prefix 'Ka-' in Kasaysayan refer to?", a: "Ka- : Tumutukoy sa relasyon o pagbubuklod." },
+    { category: "Historiography", q: "What does the suffix '-an' in Kasaysayan refer to?", a: "-an : Nagkakaroon ng talastasan, kwentuhan, pagbabahagi ng mga ideya." },
+    { category: "Historiography", q: "Who is the proponent of 'Bagong Kasaysayan'?", a: "Dr. Atoy M. Navarro : Ang nagbigay kahulugan sa Bagong Kasaysayan bilang pagsasanib ng Kanluraning Konsepto ng History at taal na kasaysayan." },
+    { category: "Historiography", q: "What is 'Pang-silang Pananaw'?", a: "Pang-silang Pananaw : Pagkukwento ng kasaysayan ng Pilipinas ng isang dayuhan para sa kapakinabangan ng kapwa dayuhan." },
+    { category: "Historiography", q: "What is 'Pang-kaming Pananaw'?", a: "Pang-kaming Pananaw : Pagkukwento ng kasaysayan ng Pilipinas ng isang Pilipino para sa kapakinabangan ng dayuhan." },
+    { category: "Historiography", q: "What is 'Pantayong Pananaw'?", a: "Pantayong Pananaw : Ang pagkukwento ng Pilipino sa isang Pilipino." },
+    { category: "Historiography", q: "What is 'Bisa ng Kasaysayan'?", a: "Bisa ng Kasaysayan : Pagkakakilanlan sa identidad ng isang bayan, pag-usbong ng pagmamahal sa bayan, at magagamit na giya sa mga pagdedesisyon." },
+    { category: "Sources", q: "What are 'Primaryang Batis' (Primary Sources)?", a: "Primaryang Batis : Karaniwang mga tao o maaari ring mga bagay na mismong naging saksi habang nagaganap ang isang mahalagang pangyayari." },
+    { category: "Sources", q: "What senses are used in 'Primaryang Batis (Pandama)'?", a: "Pandama : Sila ay malapit sa mga pangyayari at nagagamitan ng pandama—maaaring kanilang nakikita, nadarama, naririnig, naaaamoy ang mga pangyayari." },
+    { category: "Sources", q: "What are 'Sekundaryang Batis'?", a: "Sekundaryang Batis : Testimonya ng mga hindi saksi sa pangyayari subalit nagbabanggit ng mga bagay na may kaugnayan dito." },
+    { category: "Sources", q: "What is 'Talaarawan'?", a: "Talaarawan : Naratibo ng mga kaganapan na inakda ng mga tao na mismong nakaranas at nakasaksi sa mga pangyayari (Diary/Journal)." },
+    { category: "Sources", q: "What is a 'Memoir'?", a: "Memoir : Naglalarawan ng mga pangyayari habang bumabanggit ng kanyang sariling kuro-kuro ang may-akda." },
+    { category: "Sources", q: "What are 'Artipakto' or 'Liktao'?", a: "Artipakto (Liktao) : Mga bagay na nahukay ng mga arkeologo mula pa sa unang panahon na ginamit at hinubog ng tao ayon sa kanilang kultura." },
+    { category: "Sources", q: "What are 'Relikya'?", a: "Relikya : Mga labi ng mga bagay na may buhay gaya ng tao, hayop, halaman at iba pa (e.g., Metatarsal of Callao Man)." },
+    { category: "Sources", q: "What is 'Oral History'?", a: "Oral History : Sali’t saling pahayag, kwento, o salaysay na maaaring tiyak o hindi tiyak ang pinagmulan gaya ng alamat, epiko." },
+    { category: "Sources", q: "What is 'Kritikang Panlabas'?", a: "Kritikang Panlabas : Kritika ng katunayan at kapanalinagan na may kinalaman sa pagkilala kung tunay o di-tunay ang batis." },
+    { category: "Sources", q: "What is 'Kritikang Panloob'?", a: "Kritikang Panloob : Malalim na pagsusuri ng dokumento upang tuklasin ang tiyak at tunay na kahulugan ng mismong nilalaman ng akda." },
+    { category: "Repositories", q: "Where is the Spoliarium by Juan Luna located?", a: "Pambansang Museo ng Pilipinas : Matatagpuan sa Lungsod ng Maynila." },
+    { category: "Repositories", q: "Where are the original copies of Noli Me Tangere and El Filibusterismo kept?", a: "Pambansang Aklatan (National Library) : Tahanan ng mga mahahalagang aklat, dokumento, artikulo, pahayagan at peryodiko." },
+    { category: "Repositories", q: "Where are official government documents from the Spanish era kept?", a: "Pambansang Sinupan (National Archives) : Nakalagak dito ang mga opisyal na dokumento gaya ng mga dokumento noong panahon ng Kastila." },
+    { category: "Magellan Expedition", q: "Who led the Armada de Molucca?", a: "Ferdinand Magellan : Captain-general of the expedition." },
+    { category: "Magellan Expedition", q: "What date did the expedition officially start?", a: "September 20, 1519 : Official start of the voyage into the Atlantic." },
+    { category: "Magellan Expedition", q: "What defines 'Mercantilism'?", a: "Mercantilism : The economic system driving the accumulation of gold and silver." },
+    { category: "Magellan Expedition", q: "What are the 3Gs?", a: "3Gs : God, Gold, and Glory; the primary motivations for the expedition." },
+    { category: "Magellan Expedition", q: "What is the 'Papal Bull' related to the expedition?", a: "Papal Bull : The Inter Caetera Line issued by Pope Alexander VI to divide the world between Spain and Portugal." },
+    { category: "Magellan Expedition", q: "Who was the chronicler of the voyage?", a: "Antonio Pigafetta : The expert chronicler (Sobresalientes)." },
+    { category: "Magellan Expedition", q: "When did Magellan arrive at the Island of Ladrones (Guam)?", a: "March 6, 1521 : Arrival at the Island of Ladrones (Guam), where the crew was robbed." },
+    { category: "Magellan Expedition", q: "When did Magellan arrive at Homonhon (Zamal/Samar)?", a: "March 16, 1521 : Arrival at Homonhon (Zamal/Samar)." },
+    { category: "Magellan Expedition", q: "When and where was the First Mass held?", a: "March 31, 1521 : The First Mass was held; arrival in Mazaua (Limasawa)." },
+    { category: "Magellan Expedition", q: "When did the fleet arrive in Cebu (Zubu)?", a: "April 7, 1521 : Arrival in Cebu (Zubu)." },
+    { category: "Magellan Expedition", q: "When was the large-scale baptism in Cebu?", a: "April 14, 1521 : Large-scale baptism of Raja Humabon and 800 natives." },
+    { category: "Magellan Expedition", q: "Who was the Chief of Mactan who defeated Magellan?", a: "Cilapulapu (Lapu-lapu) : Chief of Mactan who defeated Magellan." },
+    { category: "Magellan Expedition", q: "When was the Battle of Mactan?", a: "April 27, 1521 : Battle of Mactan; Magellan is killed." },
+    { category: "Magellan Expedition", q: "Who was the King of Cebu baptized as Don Carlo?", a: "Raja Humabon : King of Cebu; baptized as Don Carlo." },
+    { category: "Magellan Expedition", q: "Who was the King of Mazaua?", a: "Raia Colambu : King of Mazaua; participated in the first Sandugo." },
+    { category: "Magellan Expedition", q: "Who was the slave/interpreter of Magellan?", a: "Enrique of Malacca : Magellan’s slave and interpreter (Original name: Macalla)." },
+    { category: "Magellan Expedition", q: "Which ship successfully completed the circumnavigation?", a: "Victoria : The only ship that successfully returned to Spain to complete the circumnavigation." },
+    { category: "Magellan Expedition", q: "Who commanded the Victoria back to Spain?", a: "Juan Sebastian Elcano : Completed the voyage on the Victoria." },
+    { category: "Magellan Expedition", q: "When did the Victoria return to Spain?", a: "September 6, 1522 : The ship Victoria returns to Spain under Juan Sebastian Elcano." },
+    { category: "Magellan Expedition", q: "What was the 'Sandugo'?", a: "Sandugo : The blood compact performed with local kings like Raia Colambu and Raja Humabon." },
+    { category: "Magellan Expedition", q: "What was the image gifted to the Queen of Cebu?", a: "Image of the Child Jesus : Gifted to the Queen (Johanna) after baptism." },
+    { category: "Magellan Expedition", q: "What was the 'Strait of Magellan' originally connecting?", a: "Strait of Magellan : Passage linking Chile and Argentina (explored Oct 21, 1520)." },
+    { category: "Magellan Expedition", q: "Who was Magellan's rival?", a: "Vasco da Gama : Magellan’s rival in exploration." },
+    { category: "Magellan Expedition", q: "Who funded Magellan's circumnavigation?", a: "King Charles I : Funded the expedition." },
+    { category: "Magellan Expedition", q: "Who was Zula?", a: "Zula : A chief of Mactan who sought Spanish help against Lapu-Lapu." },
+    { category: "Tagalog Customs", q: "Who is the author of 'Relacion de las Costumbres de los Tagalos'?", a: "Fray Juan de Plasencia : A Spanish friar belonging to the Franciscan Order." },
+    { category: "Tagalog Customs", q: "What is the 'Reduccion' policy?", a: "Reduccion : The policy of gathering scattered barangays into a centralized settlement (Pueblo)." },
+    { category: "Tagalog Customs", q: "What was the first book printed in the Philippines?", a: "Doctrina Christiana (1593) : The first book ever printed in the Philippines." },
+    { category: "Tagalog Customs", q: "What is a 'Dato'?", a: "Dato : The chief of the Barangay; governs 30-100 families." },
+    { category: "Tagalog Customs", q: "What is a 'Barangay'?", a: "Barangay : Derived from 'Balangay' (boat); the basic political unit." },
+    { category: "Tagalog Customs", q: "Who are the 'Maharlika'?", a: "Maharlika (Nobles) : Free-born; do not pay taxes/tribute; accompany Dato in war." },
+    { category: "Tagalog Customs", q: "Who are the 'Timawa'?", a: "Timawa (Freemen) : Commoners or freed slaves; play a role as comrades/bodyguards." },
+    { category: "Tagalog Customs", q: "Who are 'Aliping Namamahay'?", a: "Aliping Namamahay : Commoners/Householders who live in their own houses and own property." },
+    { category: "Tagalog Customs", q: "Who are 'Aliping Sa Guiguilir'?", a: "Aliping Sa Guiguilir : Hearth slaves who serve the master in his house and can be sold." },
+    { category: "Tagalog Customs", q: "What happens if a Maharlika marries an Aliping Sanguiguilid?", a: "Social Demotion : They lose their rank and their wealth is distributed." },
+    { category: "Tagalog Customs", q: "Explain the Odd-Even Rule of inheritance.", a: "Odd-Even Rule : 1st, 3rd, 5th child follow the Father's status; 2nd, 4th, 6th follow the Mother's." },
+    { category: "Tagalog Customs", q: "Who is 'Bathala'?", a: "Bathala : The Supreme Being/God; 'maker of all things'." },
+    { category: "Tagalog Customs", q: "Who is 'Tala'?", a: "Tala : The morning star/deity of stars." },
+    { category: "Tagalog Customs", q: "Who is 'Dian Masalanta'?", a: "Dian Masalanta : Patron of lovers and generation." },
+    { category: "Tagalog Customs", q: "Who are 'Lacapati and Idianale'?", a: "Lacapati and Idianale : Patrons of cultivated lands and husbandry (agriculture)." },
+    { category: "Tagalog Customs", q: "What is 'Maca'?", a: "Maca : The pre-colonial version of Paradise/Heaven." },
+    { category: "Tagalog Customs", q: "What is 'Casanaan'?", a: "Casanaan : The pre-colonial version of Hell; place of punishment." },
+    { category: "Tagalog Customs", q: "Who is 'Sitan'?", a: "Sitan : The guardian/demon of Casanaan." },
+    { category: "Tagalog Customs", q: "What is a 'Catolonan'?", a: "Catolonan : The highest priest/priestess (honorable rank)." },
+    { category: "Tagalog Customs", q: "What does a 'Mangagauay' do?", a: "Mangagauay : Witches who pretend to heal but induce sickness." },
+    { category: "Tagalog Customs", q: "What does a 'Manyisalat' do?", a: "Manyisalat : Priests who cast remedies to lovers to make them hate each other." },
+    { category: "Tagalog Customs", q: "What is a 'Mancocolam'?", a: "Mancocolam : Witch who emits fire from himself at night." },
+    { category: "Tagalog Customs", q: "What is a 'Hocloban'?", a: "Hocloban : More powerful than Mangagauay; can kill by raising a hand/wand." },
+    { category: "Tagalog Customs", q: "What is a 'Silangan'?", a: "Silangan : Witch who eats the liver of the victim (associated with Catanduanes)." },
+    { category: "Tagalog Customs", q: "What is a 'Magtatangal'?", a: "Magtatangal : Creates visions of a headless man; head separates from body." },
+    { category: "Tagalog Customs", q: "What is an 'Osuang'?", a: "Osuang : Sorcerer seen flying; eats flesh." },
+    { category: "Tagalog Customs", q: "What is a 'Mangagayoma'?", a: "Mangagayoma : Specialized in charms and love potions." },
+    { category: "Tagalog Customs", q: "What is a 'Sonat'?", a: "Sonat : 'Preacher' who predicts the salvation/condemnation of the soul." },
+    { category: "Tagalog Customs", q: "What is a 'Pangatahoan'?", a: "Pangatahoan : Soothsayer or fortune teller." },
+    { category: "Tagalog Customs", q: "What is a 'Bayoguin'?", a: "Bayoguin : Cotquean; a man whose nature inclined toward that of a woman." },
+    { category: "Tagalog Customs", q: "What is 'Bigay-kaya'?", a: "Bigay-kaya (Dowry) : Gift from the groom to the bride’s parents." },
+    { category: "Tagalog Customs", q: "What is 'Paninilbihan'?", a: "Paninilbihan : Groom’s service to the bride’s family." },
+    { category: "Tagalog Customs", q: "What is the 'Pandot'?", a: "Pandot : A ritual or festival of worship celebrated in the large house of a chief." },
+    { category: "Tagalog Customs", q: "What is 'Sibi'?", a: "Sibi : A temporary roof/shed constructed for the Pandot." },
+    { category: "Tagalog Customs", q: "What is 'Mapolo'?", a: "Mapolo : The Pleiades star cluster (signals planting season)." },
+    { category: "Tagalog Customs", q: "What is 'Balatic'?", a: "Balatic : The Greater Bear/Orion constellation." },
+    { category: "Tagalog Customs", q: "What is the symbolism of the 'Buaya' (Crocodile)?", a: "Buaya : Respected and feared; offered food to prevent harm." },
+    { category: "Tagalog Customs", q: "What is 'Frailocracia'?", a: "Frailocracia : Rule of the friars; government where friars held political power." },
+    { category: "Tagalog Customs", q: "Who coined the term 'Frailocracia'?", a: "Marcelo H. del Pilar : Coined the term in 'La Soberania Monacal en Filipinas'." },
+    { category: "Tagalog Customs", q: "What is 'Bajo de las Campanas'?", a: "Bajo de las Campanas : 'Under the bells'; living within hearing distance of church bells." },
+    { category: "Tagalog Customs", q: "What is 'Kaingin'?", a: "Kaingin : Slash and burn agriculture." },
+    { category: "Tagalog Customs", q: "What is the 'Umaholokan'?", a: "Umaholokan : The town crier who announces laws." },
+    { category: "Tagalog Customs", q: "What signifies a 'Putong'?", a: "Putong : Headgear; red color signifies the wearer has killed someone." },
+    { category: "Tagalog Customs", q: "Who are the 'Pintados'?", a: "Pintados : Tattooed people of the Visayas (tattoos act as war records)." },
+    { category: "Tagalog Customs", q: "What is 'Lic-ha'?", a: "Lic-ha : Images or idols representing spirits/anitos." },
+    { category: "Misc", q: "Who gave the name 'Las Islas Filipinas'?", a: "Ruy López de Villalobos (1543) : Originally named Leyte/Samar; extended by Legazpi." },
+    { category: "Misc", q: "What is the acronym AFJDBR referring to?", a: "Religious Orders : Augustinians, Franciscans, Jesuits, Dominicans, Benedictines, Recollects." },
+    { category: "Misc", q: "What is the 'Plaza Complex'?", a: "Plaza Complex : Layout of a town with Church, Government, School, and Market around a central Plaza." },
+    { category: "Misc", q: "What is 'Animismo'?", a: "Animismo : Belief that natural objects possess spirits." },
+    { category: "Misc", q: "What is 'Paganismo'?", a: "Paganismo : Missionary term for non-Christian worship." },
+    { category: "Misc", q: "What is 'Trial by Ordeal'?", a: "Trial by Ordeal : Judicial process involving dangerous tests (boiling water) where gods protect the innocent." },
+    { category: "Misc", q: "What is 'Biag ni Lam-ang'?", a: "Biag ni Lam-ang : Epic showing Filipino resilience and magical adventures." },
+    { category: "Misc", q: "What is the 'Mito nina Malakas at Maganda'?", a: "Mito nina Malakas at Maganda : Creation myth showing gender equality (Egalitarianism)." },
+    { category: "Misc", q: "Who is Zeus Salazar?", a: "Zeus Salazar : Proponent of Pantayong Pananaw and author regarding 'Liktao'." },
+    { category: "Misc", q: "What is 'Paleography'?", a: "Paleography : Auxiliary science studying ancient writing systems." },
+    { category: "Misc", q: "What is 'Numismatics'?", a: "Numismatics : Auxiliary science studying coins/currency." },
+    { category: "Misc", q: "What is 'Cartography'?", a: "Cartography : Study and creation of maps." },
+    { category: "Misc", q: "What is 'Restitusyon' in historical criticism?", a: "Restitusyon : Correction of a source to restore it to its original form." },
+    { category: "Misc", q: "What does 'Indio' mean in the Spanish context?", a: "Indio : Derogatory term for natives, implying lower status." }
+];
+
+// --- APP STATE ---
+let quizPool = [];
+let currentQuestionIndex = 0;
+let score = 0;
+let isAnswered = false;
+
+// --- DOM ELEMENTS ---
+const startScreen = document.getElementById('startScreen');
+const quizScreen = document.getElementById('quizScreen');
+const resultScreen = document.getElementById('resultScreen');
+
+const questionText = document.getElementById('questionText');
+const optionsGrid = document.getElementById('optionsGrid');
+const questionCount = document.getElementById('questionCount');
+const scoreDisplay = document.getElementById('scoreDisplay');
+const categoryBadge = document.getElementById('categoryBadge');
+const progressFill = document.getElementById('progressFill');
+const finalScore = document.getElementById('finalScore');
+const finalMessage = document.getElementById('finalMessage');
+
+// --- UTILITIES ---
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+// Get 3 wrong answers, preferably from the same category
+function getDistractors(correctItem) {
+    // Filter for same category but not the correct item
+    let sameCategory = rawData.filter(item => 
+        item.category === correctItem.category && item.a !== correctItem.a
+    );
+    
+    // Filter for different category
+    let differentCategory = rawData.filter(item => 
+        item.category !== correctItem.category
+    );
+
+    let distractors = [];
+
+    // Try to get at least 2 from same category
+    shuffleArray(sameCategory);
+    distractors.push(...sameCategory.slice(0, 3));
+
+    // Fill the rest with random other categories if needed
+    if (distractors.length < 3) {
+        shuffleArray(differentCategory);
+        distractors.push(...differentCategory.slice(0, 3 - distractors.length));
+    }
+    
+    // Use only the first 3 found
+    return distractors.slice(0, 3).map(d => d.a);
+}
+
+// --- GAME LOGIC ---
+
+function startQuiz() {
+    // Reset State
+    quizPool = shuffleArray([...rawData]); // Shuffle all questions
+    currentQuestionIndex = 0;
+    score = 0;
+    isAnswered = false;
+
+    // UI Updates
+    startScreen.classList.remove('active');
+    resultScreen.classList.remove('active');
+    quizScreen.classList.add('active');
+    
+    showQuestion();
+}
+
+function showQuestion() {
+    if (currentQuestionIndex >= quizPool.length) {
+        endQuiz();
+        return;
+    }
+
+    const item = quizPool[currentQuestionIndex];
+    isAnswered = false;
+
+    // Update Header Info
+    questionCount.innerText = `Question ${currentQuestionIndex + 1} / ${quizPool.length}`;
+    scoreDisplay.innerText = `Score: ${score}`;
+    categoryBadge.innerText = item.category;
+    categoryBadge.style.display = 'inline-block';
+    
+    // Progress Bar
+    const progressPercent = ((currentQuestionIndex) / quizPool.length) * 100;
+    progressFill.style.width = `${progressPercent}%`;
+
+    // Set Text
+    questionText.innerText = item.q;
+
+    // Generate Options
+    const distractors = getDistractors(item);
+    const options = [item.a, ...distractors];
+    shuffleArray(options);
+
+    // Render Buttons
+    optionsGrid.innerHTML = '';
+    options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerText = opt;
+        btn.onclick = () => handleAnswer(btn, opt, item.a);
+        optionsGrid.appendChild(btn);
+    });
+}
+
+function handleAnswer(selectedBtn, selectedAnswer, correctAnswer) {
+    if (isAnswered) return;
+    isAnswered = true;
+
+    const buttons = optionsGrid.querySelectorAll('.option-btn');
+
+    if (selectedAnswer === correctAnswer) {
+        score++;
+        selectedBtn.classList.add('correct');
+    } else {
+        selectedBtn.classList.add('wrong');
+        // Highlight the correct one
+        buttons.forEach(btn => {
+            if (btn.innerText === correctAnswer) {
+                btn.classList.add('correct');
+            }
+        });
+    }
+
+    // Disable all buttons
+    buttons.forEach(btn => btn.disabled = true);
+
+    // Next question delay
+    setTimeout(() => {
+        currentQuestionIndex++;
+        showQuestion();
+    }, 1500); // 1.5 seconds wait
+}
+
+function endQuiz() {
+    quizScreen.classList.remove('active');
+    resultScreen.classList.add('active');
+
+    const percentage = Math.round((score / quizPool.length) * 100);
+    finalScore.innerText = `${percentage}%`;
+    
+    progressFill.style.width = '100%';
+
+    if (percentage === 100) {
+        finalMessage.innerText = "Perfect! You're a history master!";
+    } else if (percentage >= 80) {
+        finalMessage.innerText = "Excellent work! You really know your stuff.";
+    } else if (percentage >= 60) {
+        finalMessage.innerText = "Good job! A little more review and you'll ace it.";
+    } else {
+        finalMessage.innerText = "Keep practicing! Review the cards again.";
+    }
+}
+
+</script>
+
+</body>
+</html>
