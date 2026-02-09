@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NSTP: DRRM & Environment Quiz</title>
+    <style>
+        :root {
+            /* NSTP Teal/Emergency Theme */
+            --primary: #00695c;
+            --accent: #26a69a;
+            --success: #2e7d32;
+            --error: #c62828;
+            --bg: #e0f2f1;
+            --text: #263238;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 20px;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Header */
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        .header h1 { margin: 0; font-size: 1.5rem; }
+        .category-badge {
+            background: rgba(0,0,0,0.2);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-top: 10px;
+            display: inline-block;
+        }
+
+        /* Screens */
+        .screen { display: none; padding: 30px; flex: 1; }
+        .screen.active { display: flex; flex-direction: column; }
+
+        /* Start Screen */
+        .start-screen { text-align: center; justify-content: center; align-items: center; gap: 20px; }
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            margin-top: 10px;
+        }
+        .btn:hover { transform: translateY(-2px); background: var(--accent); }
+
+        /* Quiz Screen */
+        .progress-bar {
+            height: 6px;
+            background: #b2dfdb;
+            width: 100%;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-weight: bold;
+            color: #546e7a;
+            font-size: 0.9rem;
+        }
+        .question-text {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .option-btn {
+            background: white;
+            border: 2px solid #cfd8dc;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 60px;
+        }
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--accent);
+            background: #e0f2f1;
+        }
+        .option-btn.correct {
+            background-color: #c8e6c9;
+            border-color: var(--success);
+            color: #1b5e20;
+        }
+        .option-btn.wrong {
+            background-color: #ffcdd2;
+            border-color: var(--error);
+            color: #b71c1c;
+        }
+        .option-btn:disabled {
+            cursor: default;
+            opacity: 0.7;
+        }
+
+        /* Feedback Section */
+        .feedback-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: #eceff1;
+            border-left: 5px solid var(--accent);
+            border-radius: 4px;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .feedback-box.show { display: block; }
+        .feedback-title { font-weight: bold; display: block; margin-bottom: 5px; color: var(--primary); }
+
+        /* Result Screen */
+        .result-screen { text-align: center; justify-content: center; align-items: center; }
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 20px auto;
+            box-shadow: 0 5px 15px rgba(0, 105, 92, 0.4);
+        }
+        .message { margin-bottom: 30px; font-size: 1.2rem; color: #666; }
+
+        @media (max-width: 600px) {
+            .container { border-radius: 0; height: 100vh; }
+            .question-text { font-size: 1.1rem; }
+            .options-grid { grid-template-columns: 1fr; } 
+            .option-btn { padding: 12px; font-size: 0.9rem; min-height: 50px; }
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>NSTP Reviewer</h1>
+            <span id="categoryBadge" class="category-badge" style="display:none">General</span>
+        </div>
+
+        <div class="progress-bar">
+            <div id="progressFill" class="progress-fill"></div>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="startScreen" class="screen active start-screen">
+            <h2>Disaster Risk & Environment</h2>
+            <p>Topics: Environmental Laws, Thematic Areas, and Disaster Profile.</p>
+            <button class="btn" onclick="startQuiz()">Start Quiz</button>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quizScreen" class="screen">
+            <div class="stats">
+                <span id="questionCount">Question 1/10</span>
+                <span id="scoreDisplay">Score: 0</span>
+            </div>
+            <div id="questionText" class="question-text">
+                Question goes here?
+            </div>
+            <div id="optionsGrid" class="options-grid">
+                <!-- Options injected by JS -->
+            </div>
+
+            <!-- Explanation/Feedback Area -->
+            <div id="feedbackBox" class="feedback-box">
+                <span class="feedback-title">Info:</span>
+                <span id="feedbackText"></span>
+                <br>
+                <button class="btn" id="nextBtn" style="width:100%; padding: 10px; margin-top:10px;" onclick="nextQuestion()">Next Question</button>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="resultScreen" class="screen result-screen">
+            <h2>Quiz Completed!</h2>
+            <div class="score-circle">
+                <span id="finalScore">0%</span>
+            </div>
+            <p id="finalMessage" class="message">Great job!</p>
+            <button class="btn" onclick="startQuiz()">Retake Quiz</button>
+        </div>
+    </div>
+
+<script>
+// --- CLEANED DATA SOURCE ---
+// a = The Choice (Term), q = The Question, info = The Explanation (After)
+const rawData = [
+    // Environmental Protection
+    { category: "Environment", a: "Public Trust Doctrine", q: "Under what doctrine does the government act as a trustee managing resources for the public's benefit?", info: "Government manages resources for the people." },
+    { category: "Environment", a: "Stewardship", q: "What concept emphasizes that while humans have dominion over nature, they must care for it?", info: "We must care for it because our existence depends on it." },
+    { category: "Environment", a: "Diversity and Stability", q: "Which environmental principle states that all forms of life are important and serve a purpose?", info: "The 'web of life'." },
+    { category: "Environment", a: "Interdependence", q: "Which principle states that everything is connected and living/non-living factors interact?", info: "Example: Converting farm land to urban areas affects food prices." },
+    { category: "Environment", a: "Change", q: "Which principle states that human activities have accelerated negative impacts like erosion?", info: "Everything changes." },
+    { category: "Environment", a: "Pollution", q: "Which principle is summarized by 'Everything must go somewhere'?", info: "Matter ends up in a 'sink' like the atmosphere or soil." },
+    { category: "Environment", a: "Finiteness of Resources", q: "Which principle states that the Earth is a closed system and matter must be recycled?", info: "Resources are not unlimited." },
+    
+    // Environmental Laws
+    { category: "Laws", a: "RA 6969", q: "Which law controls toxic substances and hazardous/nuclear wastes?", info: "Toxic Substances Control Act." },
+    { category: "Laws", a: "RA 8749", q: "Which law is known as the Clean Air Act of 1999?", info: "Protects the right to a healthful ecology regarding air." },
+    { category: "Laws", a: "RA 9003", q: "Which law regulates solid waste generation, collection, and disposal (2000)?", info: "Ecological Solid Waste Management Act." },
+    { category: "Laws", a: "RA 9275", q: "Which law aims to protect and revive fresh, brackish, and marine waters (2004)?", info: "Clean Water Act." },
+    { category: "Laws", a: "RA 9147", q: "Which act focuses on the conservation and protection of wildlife resources?", info: "Wildlife Resources Conservation and Protection Act." },
+    { category: "Laws", a: "RA 7942", q: "Which law declares state ownership of mineral resources (Mining Act)?", info: "Philippine Mining Act of 1995." },
+
+    // PH Disaster Profile
+    { category: "Disaster Profile", a: "8th", q: "What is the Philippines' rank in the 2021 World Risk Index?", info: "One of the highest risk countries in the world." },
+    { category: "Disaster Profile", a: "Pacific Ring of Fire", q: "Where is the Philippines situated, leading to frequent seismic and volcanic activity?", info: "A region of high tectonic activity." },
+    { category: "Disaster Profile", a: "20", q: "On average, how many typhoons enter the Philippine Area of Responsibility per year?", info: "Hydro-Meteorological hazards." },
+    { category: "Disaster Profile", a: "Tsunami", q: "What natural hazard is caused by ocean waves resulting from sea floor displacement?", info: "A geological hazard." },
+    { category: "Disaster Profile", a: "Human-Induced", q: "Industrial accidents, terrorism, and bomb threats are classified as what type of hazard?", info: "Man-made hazards." },
+    { category: "Disaster Profile", a: "Psychological", q: "PTSD, depression, and anxiety are examples of what type of disaster impact?", info: "Mental health impact." },
+
+    // Four Thematic Areas (RA 10121)
+    { category: "Thematic Areas", a: "RA 10121", q: "What is the PDRRM Act of 2010?", info: "Establishes the NDRRMC and the 4 thematic areas." },
+    { category: "Thematic Areas", a: "Prevention", q: "What is the 'outright avoidance' of adverse impacts of hazards?", info: "Stopping the disaster before it happens." },
+    { category: "Thematic Areas", a: "Mitigation", q: "What is the 'lessening or limitation' of the adverse impacts of hazards?", info: "Reducing the severity." },
+    { category: "Thematic Areas", a: "Disaster Preparedness", q: "Which thematic area focuses on the knowledge and capacities to anticipate and recover?", info: "Being ready before it hits." },
+    { category: "Thematic Areas", a: "3 Days", q: "How long should a survival kit supply last at a minimum?", info: "72 hours of self-sufficiency." },
+    { category: "Thematic Areas", a: "Disaster Response", q: "Which thematic area involves the provision of emergency services during or immediately after a disaster?", info: "Saving lives and ensuring public safety." },
+    { category: "Thematic Areas", a: "Total Evacuation", q: "What type of evacuation requires everyone to leave the area?", info: "Complete evacuation." },
+    { category: "Thematic Areas", a: "Reverse Evacuation", q: "What procedure involves moving people inside for safety?", info: "Going indoors to avoid outside threats." },
+    { category: "Thematic Areas", a: "Shelter-in-Place", q: "What procedure involves staying in a safe interior room during a hazard?", info: "Staying put where you are." },
+    { category: "Thematic Areas", a: "Disaster Recovery", q: "Which area focuses on restoring pre-disaster living conditions while reducing future risks?", info: "Building back better." },
+    { category: "Thematic Areas", a: "Rehabilitation", q: "Which area focuses on restoring normal functioning of livelihoods and infrastructure?", info: "Getting back to normal." }
+];
+
+// --- APP STATE ---
+let quizPool = [];
+let currentQuestionIndex = 0;
+let score = 0;
+let isAnswered = false;
+
+// --- DOM ELEMENTS ---
+const startScreen = document.getElementById('startScreen');
+const quizScreen = document.getElementById('quizScreen');
+const resultScreen = document.getElementById('resultScreen');
+
+const questionText = document.getElementById('questionText');
+const optionsGrid = document.getElementById('optionsGrid');
+const questionCount = document.getElementById('questionCount');
+const scoreDisplay = document.getElementById('scoreDisplay');
+const categoryBadge = document.getElementById('categoryBadge');
+const progressFill = document.getElementById('progressFill');
+const finalScore = document.getElementById('finalScore');
+const finalMessage = document.getElementById('finalMessage');
+const feedbackBox = document.getElementById('feedbackBox');
+const feedbackText = document.getElementById('feedbackText');
+const nextBtn = document.getElementById('nextBtn');
+
+// --- UTILITIES ---
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+// Get 3 wrong answers (just the Terms)
+function getDistractors(correctItem) {
+    // 1. Get items from same category, excluding correct one
+    let sameCategory = rawData.filter(item => 
+        item.category === correctItem.category && item.a !== correctItem.a
+    );
+    
+    // 2. Get items from other categories (fallback)
+    let differentCategory = rawData.filter(item => 
+        item.category !== correctItem.category
+    );
+
+    let distractors = [];
+
+    // Shuffle and pick
+    shuffleArray(sameCategory);
+    distractors.push(...sameCategory.slice(0, 3));
+
+    // Fill if needed
+    if (distractors.length < 3) {
+        shuffleArray(differentCategory);
+        distractors.push(...differentCategory.slice(0, 3 - distractors.length));
+    }
+    
+    // Return only the Answer strings
+    return distractors.map(d => d.a);
+}
+
+// --- GAME LOGIC ---
+
+function startQuiz() {
+    quizPool = shuffleArray([...rawData]); 
+    currentQuestionIndex = 0;
+    score = 0;
+    isAnswered = false;
+
+    startScreen.classList.remove('active');
+    resultScreen.classList.remove('active');
+    quizScreen.classList.add('active');
+    
+    showQuestion();
+}
+
+function showQuestion() {
+    if (currentQuestionIndex >= quizPool.length) {
+        endQuiz();
+        return;
+    }
+
+    const item = quizPool[currentQuestionIndex];
+    isAnswered = false;
+    feedbackBox.classList.remove('show'); // Hide feedback
+    optionsGrid.style.pointerEvents = 'auto'; // Enable clicks
+
+    // Update Header
+    questionCount.innerText = `Question ${currentQuestionIndex + 1} / ${quizPool.length}`;
+    scoreDisplay.innerText = `Score: ${score}`;
+    categoryBadge.innerText = item.category;
+    categoryBadge.style.display = 'inline-block';
+    
+    const progressPercent = ((currentQuestionIndex) / quizPool.length) * 100;
+    progressFill.style.width = `${progressPercent}%`;
+
+    // Set Question
+    questionText.innerText = item.q;
+
+    // Generate Options
+    const distractors = getDistractors(item);
+    const options = [item.a, ...distractors];
+    shuffleArray(options);
+
+    // Render Buttons
+    optionsGrid.innerHTML = '';
+    options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerText = opt;
+        btn.onclick = () => handleAnswer(btn, opt, item);
+        optionsGrid.appendChild(btn);
+    });
+}
+
+function handleAnswer(selectedBtn, selectedAnswer, item) {
+    if (isAnswered) return;
+    isAnswered = true;
+
+    const buttons = optionsGrid.querySelectorAll('.option-btn');
+    optionsGrid.style.pointerEvents = 'none'; // Prevent double clicks
+
+    let isCorrect = false;
+
+    if (selectedAnswer === item.a) {
+        score++;
+        selectedBtn.classList.add('correct');
+        isCorrect = true;
+    } else {
+        selectedBtn.classList.add('wrong');
+        // Highlight correct
+        buttons.forEach(btn => {
+            if (btn.innerText === item.a) {
+                btn.classList.add('correct');
+            }
+        });
+    }
+
+    // Show Feedback
+    feedbackText.innerText = isCorrect 
+        ? `Correct! ${item.info}` 
+        : `Wrong. The correct answer is ${item.a}. ${item.info}`;
+    
+    feedbackBox.classList.add('show');
+    
+    // Auto-scroll to feedback on mobile
+    if(window.innerWidth < 600) {
+        feedbackBox.scrollIntoView({behavior: "smooth"});
+    }
+}
+
+function nextQuestion() {
+    currentQuestionIndex++;
+    showQuestion();
+}
+
+function endQuiz() {
+    quizScreen.classList.remove('active');
+    resultScreen.classList.add('active');
+
+    const percentage = Math.round((score / quizPool.length) * 100);
+    finalScore.innerText = `${percentage}%`;
+    progressFill.style.width = '100%';
+
+    if (percentage === 100) finalMessage.innerText = "Perfect! You're ready to save lives!";
+    else if (percentage >= 80) finalMessage.innerText = "Excellent work! Very prepared.";
+    else if (percentage >= 60) finalMessage.innerText = "Good job! Review the laws a bit more.";
+    else finalMessage.innerText = "Keep practicing!";
+}
+</script>
+
+</body>
+</html>
