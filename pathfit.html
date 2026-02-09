@@ -3,150 +3,206 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PATHFIT 2 Review Quiz</title>
+<title>PATHFIT 2 Fitness Tests Quiz</title>
 <style>
-body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
-.quiz-container { background: white; max-width: 600px; margin: 0 auto; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-h2 { color: #800000; text-align: center; } /* BulSU Red-ish color */
-.question { margin-bottom: 15px; font-weight: bold; }
-.options button { display: block; width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; background: #fff; cursor: pointer; text-align: left; border-radius: 5px; transition: 0.3s; }
-.options button:hover { background-color: #f0f0f0; }
-.feedback { margin-top: 10px; font-weight: bold; padding: 10px; border-radius: 5px; display: none; }
-.correct { background-color: #d4edda; color: #155724; border-color: #c3e6cb; }
-.incorrect { background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; }
-.btn-next { display: none; width: 100%; padding: 10px; background-color: #333; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 15px; }
-.score-area { text-align: center; margin-top: 20px; font-size: 1.2em; display: none; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4; padding: 20px; }
+    .quiz-container { background: white; max-width: 600px; margin: 0 auto; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    h2 { color: #800000; text-align: center; margin-bottom: 25px; border-bottom: 2px solid #eee; padding-bottom: 10px;}
+    .question { margin-bottom: 20px; font-weight: bold; font-size: 1.1em; color: #333; }
+    .options button { display: block; width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; background: #fff; cursor: pointer; text-align: left; border-radius: 6px; transition: 0.2s; font-size: 1em; }
+    .options button:hover { background-color: #f8f9fa; border-color: #bbb; }
+    .feedback { margin-top: 15px; font-weight: bold; padding: 15px; border-radius: 6px; display: none; }
+    .correct { background-color: #d4edda; color: #155724; border-color: #c3e6cb; }
+    .incorrect { background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+    .btn-next { display: none; width: 100%; padding: 12px; background-color: #800000; color: white; border: none; border-radius: 6px; cursor: pointer; margin-top: 20px; font-size: 1em; font-weight: bold;}
+    .btn-next:hover { background-color: #600000; }
+    .score-area { text-align: center; margin-top: 20px; font-size: 1.2em; display: none; }
+    .progress { text-align: right; font-size: 0.9em; color: #666; margin-bottom: 10px; }
 </style>
 </head>
 <body>
+
 <div class="quiz-container">
-<h2>PATHFIT 2 Review Quiz</h2>
-<div id="quiz-box">
-<div class="question" id="question-text"></div>
-<div class="options" id="options-container"></div>
-<div class="feedback" id="feedback"></div>
-<button class="btn-next" id="next-btn" onclick="nextQuestion()">Next Question</button>
+    <h2>PATHFIT 2: Fitness Tests Review</h2>
+    
+    <div id="quiz-box">
+        <div class="progress" id="progress-text">Question 1 of --</div>
+        <div class="question" id="question-text"></div>
+        <div class="options" id="options-container"></div>
+        <div class="feedback" id="feedback"></div>
+        <button class="btn-next" id="next-btn" onclick="nextQuestion()">Next Question</button>
+    </div>
+
+    <div class="score-area" id="score-area"></div>
 </div>
-<div class="score-area" id="score-area"></div>
-</div>
+
 <script>
 const questions = [
-{
-q: "What does the 'I' in the F.I.T.T. principle stand for?",
-options: ["Interval", "Intensity", "Impact", "Interaction"],
-answer: 1,
-explanation: "I stands for Intensity (how hard you exercise)."
-},
-{
-q: "Which principle states that you must increase the workload to see improvements?",
-options: ["Specificity", "Reversibility", "Overload", "Individuality"],
-answer: 2,
-explanation: "Overload means working the body harder than normal to force adaptation."
-},
-{
-q: "Push-ups primarily target which component of fitness?",
-options: ["Cardiovascular Endurance", "Flexibility", "Muscular Strength/Endurance", "Agility"],
-answer: 2,
-explanation: "Push-ups build muscular strength and endurance in the upper body."
-},
-{
-q: "Which movement pattern is primarily used in a Deadlift?",
-options: ["Squat", "Hinge", "Lunge", "Rotation"],
-answer: 1,
-explanation: "A deadlift is a hip-dominant movement, known as a Hinge."
-},
-{
-q: "What type of muscle contraction occurs when you hold a Plank position?",
-options: ["Concentric", "Eccentric", "Isometric", "Isokinetic"],
-answer: 2,
-explanation: "Isometric contractions occur when the muscle generates force without changing length (holding still)."
-},
-{
-q: "What is the estimated Maximum Heart Rate (MHR) for a 20-year-old student?",
-options: ["180 bpm", "190 bpm", "200 bpm", "220 bpm"],
-answer: 2,
-explanation: "Formula: 220 - Age. (220 - 20 = 200)."
-},
-{
-q: "Which activity is considered a 'Pull' movement?",
-options: ["Bench Press", "Squat", "Rowing", "Overhead Press"],
-answer: 2,
-explanation: "Rowing involves pulling weight toward the body."
-},
-{
-q: "Which fitness component refers to the range of motion available at a joint?",
-options: ["Agility", "Balance", "Flexibility", "Power"],
-answer: 2,
-explanation: "Flexibility defines how far a joint can move through its range of motion."
-}
+    // --- Health-Related Fitness Tests ---
+    {
+        q: "What is the primary purpose of the 3-Minute Step Test?",
+        options: ["Muscular Strength", "Cardiovascular Endurance", "Speed", "Balance"],
+        answer: 1,
+        explanation: "It measures how quickly your heart rate recovers after exercise, indicating cardiovascular health."
+    },
+    {
+        q: "Push-ups are a test designed to measure which fitness component?",
+        options: ["Flexibility", "Cardiovascular Endurance", "Upper Body Muscular Strength/Endurance", "Agility"],
+        answer: 2,
+        explanation: "Push-ups measure the strength and endurance of the chest, shoulders, and triceps."
+    },
+    {
+        q: "Which specific area of flexibility does the Sit and Reach test assess?",
+        options: ["Shoulders", "Neck", "Hamstrings and Lower Back", "Quadriceps"],
+        answer: 2,
+        explanation: "Sit and Reach specifically targets the flexibility of the lower back and hamstring muscles."
+    },
+    {
+        q: "What does the Zipper Test measure?",
+        options: ["Shoulder Flexibility", "Hip Mobility", "Wrist Strength", "Ankle Stability"],
+        answer: 0,
+        explanation: "The Zipper Test evaluates the range of motion (flexibility) in the shoulder joints."
+    },
+    {
+        q: "Sit-ups (or Curl-ups) are primarily used to test:",
+        options: ["Upper Body Strength", "Abdominal Muscular Strength & Endurance", "Leg Power", "Agility"],
+        answer: 1,
+        explanation: "Sit-ups test the strength and endurance of the abdominal (core) muscles."
+    },
+
+    // --- Skill-Related Fitness Tests ---
+    {
+        q: "Which test is used to assess Static Balance?",
+        options: ["Hexagon Jump", "Stork Balance Stand Test", "Ruler Drop", "40m Sprint"],
+        answer: 1,
+        explanation: "The Stork Balance Stand requires maintaining equilibrium on one foot for as long as possible."
+    },
+    {
+        q: "The Hexagon Jump Test is designed to measure which component?",
+        options: ["Power", "Agility", "Speed", "Flexibility"],
+        answer: 1,
+        explanation: "Agility is the ability to move and change direction quickly, which is tested by jumping in and out of the hexagon."
+    },
+    {
+        q: "Paper Juggling is a test used to measure:",
+        options: ["Reaction Time", "Coordination", "Power", "Speed"],
+        answer: 1,
+        explanation: "Paper Juggling tests eye-hand coordination by focusing on the ability to track and catch objects rhythmically."
+    },
+    {
+        q: "What does the Ruler Drop Test measure?",
+        options: ["Reaction Time", "Speed", "Explosive Power", "Balance"],
+        answer: 0,
+        explanation: "It measures the time it takes to respond to a stimulus (seeing the ruler drop and catching it)."
+    },
+    {
+        q: "Which test is commonly used to measure Leg Power?",
+        options: ["Standing Long Jump", "Plank", "Zipper Test", "Stork Stand"],
+        answer: 0,
+        explanation: "Power is Strength x Speed. The Standing Long Jump measures the explosive power generated by the legs."
+    },
+    {
+        q: "In the context of the 40-Meter Sprint, what component is being tested?",
+        options: ["Endurance", "Speed", "Balance", "Coordination"],
+        answer: 1,
+        explanation: "Sprinting a short distance as fast as possible is the standard test for Speed."
+    },
+    {
+        q: "Which principle of training implies that training should be relevant to the sport or activity you are doing?",
+        options: ["Overload", "Specificity", "Progression", "Reversibility"],
+        answer: 1,
+        explanation: "Specificity means you must do specific exercises to improve specific components (e.g., stretching for flexibility)."
+    }
 ];
 
 let currentQuestion = 0;
 let score = 0;
 
 function loadQuestion() {
-const q = questions[currentQuestion];
-document.getElementById("question-text").innerText = (currentQuestion + 1) + ". " + q.q;
-const optionsDiv = document.getElementById("options-container");
-optionsDiv.innerHTML = "";
+    const q = questions[currentQuestion];
+    
+    // Update progress text
+    document.getElementById("progress-text").innerText = `Question ${currentQuestion + 1} of ${questions.length}`;
+    
+    document.getElementById("question-text").innerText = (currentQuestion + 1) + ". " + q.q;
+    const optionsDiv = document.getElementById("options-container");
+    optionsDiv.innerHTML = "";
 
-q.options.forEach((opt, index) => {
-const btn = document.createElement("button");
-btn.innerText = opt;
-btn.onclick = () => checkAnswer(index, btn);
-optionsDiv.appendChild(btn);
-});
+    q.options.forEach((opt, index) => {
+        const btn = document.createElement("button");
+        btn.innerText = opt;
+        btn.onclick = () => checkAnswer(index, btn);
+        optionsDiv.appendChild(btn);
+    });
 
-document.getElementById("feedback").style.display = "none";
-document.getElementById("next-btn").style.display = "none";
+    document.getElementById("feedback").style.display = "none";
+    document.getElementById("next-btn").style.display = "none";
 }
 
 function checkAnswer(selected, btnElement) {
-const q = questions[currentQuestion];
-const feedback = document.getElementById("feedback");
-const options = document.getElementById("options-container").children;
+    const q = questions[currentQuestion];
+    const feedback = document.getElementById("feedback");
+    const options = document.getElementById("options-container").children;
 
-for (let i = 0; i < options.length; i++) {
-options[i].disabled = true;
-}
+    // Disable all buttons
+    for (let i = 0; i < options.length; i++) {
+        options[i].disabled = true;
+        options[i].style.cursor = "default";
+    }
 
-if (selected === q.answer) {
-score++;
-btnElement.style.backgroundColor = "#d4edda";
-feedback.innerHTML = "✅ Correct! " + q.explanation;
-feedback.className = "feedback correct";
-} else {
-btnElement.style.backgroundColor = "#f8d7da";
-options[q.answer].style.backgroundColor = "#d4edda";
-feedback.innerHTML = "❌ Incorrect. " + q.explanation;
-feedback.className = "feedback incorrect";
-}
+    if (selected === q.answer) {
+        score++;
+        btnElement.style.backgroundColor = "#d4edda";
+        btnElement.style.borderColor = "#c3e6cb";
+        feedback.innerHTML = "✅ <strong>Correct!</strong><br>" + q.explanation;
+        feedback.className = "feedback correct";
+    } else {
+        btnElement.style.backgroundColor = "#f8d7da";
+        btnElement.style.borderColor = "#f5c6cb";
+        // Highlight the correct answer
+        options[q.answer].style.backgroundColor = "#d4edda";
+        options[q.answer].style.borderColor = "#c3e6cb";
+        feedback.innerHTML = "❌ <strong>Incorrect.</strong><br>" + q.explanation;
+        feedback.className = "feedback incorrect";
+    }
 
-feedback.style.display = "block";
-document.getElementById("next-btn").style.display = "block";
+    feedback.style.display = "block";
+    document.getElementById("next-btn").style.display = "block";
 }
 
 function nextQuestion() {
-currentQuestion++;
-if (currentQuestion < questions.length) {
-loadQuestion();
-} else {
-showScore();
-}
+    currentQuestion++;
+    if (currentQuestion < questions.length) {
+        loadQuestion();
+    } else {
+        showScore();
+    }
 }
 
 function showScore() {
-document.getElementById("quiz-box").style.display = "none";
-const scoreArea = document.getElementById("score-area");
-scoreArea.style.display = "block";
-scoreArea.innerHTML = `<h3>You finished the quiz!</h3><p>Your Score: ${score} / ${questions.length}</p>`;
-if(score === questions.length) scoreArea.innerHTML += "<p>Perfect! You're ready for the exam!</p>";
-else if(score > questions.length / 2) scoreArea.innerHTML += "<p>Good job! Review the weak spots.</p>";
-else scoreArea.innerHTML += "<p>Keep reviewing the modules above.</p>";
+    document.getElementById("quiz-box").style.display = "none";
+    const scoreArea = document.getElementById("score-area");
+    scoreArea.style.display = "block";
+    
+    let message = "";
+    const percentage = (score / questions.length) * 100;
+
+    if (percentage === 100) message = "Perfect Score! You are a fitness expert! 🏆";
+    else if (percentage >= 80) message = "Great job! You know your fitness tests well. 🥇";
+    else if (percentage >= 60) message = "Good effort! Review the tests you missed. 📚";
+    else message = "Keep studying the different fitness tests and try again! 💪";
+
+    scoreArea.innerHTML = `
+        <h3>Quiz Completed!</h3>
+        <p style="font-size: 1.5em; font-weight: bold; margin: 10px 0;">${score} / ${questions.length}</p>
+        <p>${message}</p>
+        <button class="btn-next" onclick="location.reload()" style="display:inline-block; width: auto; padding: 10px 20px;">Retake Quiz</button>
+    `;
 }
 
 // Initialize
 loadQuestion();
 </script>
+
 </body>
 </html>
