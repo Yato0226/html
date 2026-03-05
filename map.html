@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PH Geo-Guesser Memorizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+            min-height: 100vh;
+            transition: background-color 0.5s ease;
+        }
+
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: border-color 0.3s ease;
+        }
+
+        .correct-flash { animation: success 0.5s ease-out; }
+        @keyframes success {
+            0% { background: rgba(34, 197, 94, 0.2); }
+            100% { background: transparent; }
+        }
+
+        .shake { animation: shake 0.4s ease-in-out; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .map-container img {
+            max-width: 100%;
+            max-height: 70vh;
+            height: auto;
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+        }
+
+        .nav-btn.active {
+            background: var(--region-color, #38bdf8);
+            color: #0f172a;
+        }
+
+        /* Dynamic Transitions */
+        .region-text { transition: color 0.3s ease; color: var(--region-color, #38bdf8); }
+        .region-border { transition: border-color 0.3s ease; border-color: var(--region-color, #38bdf8); }
+        .region-bg { transition: background-color 0.3s ease; background-color: var(--region-color, #38bdf8); }
+        .region-ring { transition: box-shadow 0.3s ease; }
+        .region-ring:focus { --tw-ring-color: var(--region-color, #38bdf8); }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto w-full">
+        <!-- Navigation -->
+        <div class="flex justify-center mb-8">
+            <div class="glass p-1 rounded-xl flex gap-1">
+                <button onclick="switchTab('game')" id="tab-game" class="nav-btn active px-6 py-2 rounded-lg font-bold transition-all">Play Game</button>
+                <button onclick="switchTab('reviewer')" id="tab-reviewer" class="nav-btn px-6 py-2 rounded-lg font-bold transition-all text-slate-400 hover:text-white">Map Reviewer</button>
+            </div>
+        </div>
+
+        <!-- GAME TAB -->
+        <div id="game-section">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 text-center md:text-left">
+                <div>
+                    <h1 class="text-3xl font-800 bg-gradient-to-r from-sky-400 to-blue-600 bg-clip-text text-transparent">
+                        PH GEO-GUESSER
+                    </h1>
+                    <p class="text-slate-400 text-sm">Memorize Regions, Provinces, & Capitals</p>
+                </div>
+                
+                <div class="flex gap-4">
+                    <div class="glass px-4 py-2 rounded-xl text-center border-b-2 region-border">
+                        <p class="text-xs text-slate-400 uppercase font-bold tracking-tighter">Current Streak</p>
+                        <p id="streak" class="text-xl font-black region-text">0</p>
+                    </div>
+                    <div class="glass px-4 py-2 rounded-xl text-center border-b-2 border-emerald-500">
+                        <p class="text-xs text-slate-400 uppercase font-bold tracking-tighter">Personal Best</p>
+                        <p id="bestStreak" class="text-xl font-black text-emerald-400">0</p>
+                    </div>
+                    <div id="timerContainer" class="hidden glass px-4 py-2 rounded-xl text-center border-orange-500/50 border-b-2 border-orange-500">
+                        <p class="text-xs text-slate-400 uppercase font-bold tracking-tighter">Time Left</p>
+                        <p id="timer" class="text-xl font-black text-orange-500">60</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="md:col-span-1 space-y-4">
+                    <div class="glass p-6 rounded-2xl">
+                        <label class="block text-sm font-semibold mb-2 text-slate-300">Target Region</label>
+                        <select id="regionSelect" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white focus:ring-2 region-ring outline-none transition-all">
+                        </select>
+                        <div class="mt-6 space-y-2">
+                            <button onclick="toggleMode('study')" id="studyBtn" class="w-full py-2 rounded-lg font-semibold transition-all region-bg text-slate-900">Study Mode</button>
+                            <button onclick="toggleMode('timeAttack')" id="timeBtn" class="w-full py-2 rounded-lg font-semibold transition-all bg-slate-700 text-slate-400">Time Attack (60s)</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="gameCard" class="md:col-span-2 glass p-8 rounded-3xl relative overflow-hidden flex flex-col items-center justify-center text-center min-h-[400px]">
+                    <div id="gameOverlay" class="hidden absolute inset-0 bg-slate-900/90 z-10 flex flex-col items-center justify-center p-6">
+                        <h2 class="text-4xl font-bold mb-2">Time's Up!</h2>
+                        <p id="finalScore" class="text-xl text-slate-300 mb-6">You got 0 provinces.</p>
+                        <button onclick="startMode()" class="region-bg text-slate-900 px-8 py-3 rounded-xl font-bold hover:brightness-110 transition-all">Try Again</button>
+                    </div>
+
+                    <div class="w-full max-w-sm">
+                        <span id="regionLabel" class="region-text font-bold tracking-widest text-xs uppercase mb-2 block tracking-[0.2em]">REGION III</span>
+                        <h2 class="text-slate-400 text-lg mb-1">What is the capital of</h2>
+                        <h1 id="provinceName" class="text-4xl md:text-5xl font-black mb-8 tracking-tight italic">BULACAN</h1>
+                        <input type="text" id="answerInput" placeholder="Type capital..." class="w-full bg-slate-800/50 border-2 border-slate-700 rounded-2xl py-4 px-6 text-xl text-center focus:region-border focus:ring-4 region-ring outline-none transition-all placeholder:text-slate-600" autocomplete="off">
+                        <div id="feedback" class="h-6 text-sm font-semibold mb-6 mt-4"></div>
+                        <div class="flex gap-3">
+                            <button onclick="checkAnswer()" class="flex-1 bg-white text-slate-900 py-4 rounded-2xl font-800 hover:bg-slate-200 transition-all uppercase tracking-wider">Submit</button>
+                            <button onclick="nextQuestion(false)" class="px-6 py-4 rounded-2xl bg-slate-800 text-slate-400 hover:bg-slate-700 transition-all">Skip</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- REVIEWER TAB -->
+        <div id="reviewer-section" class="hidden space-y-6">
+            <div class="glass p-6 rounded-2xl">
+                <div class="text-center mb-4 text-xs font-bold uppercase tracking-widest text-slate-500">Luzon</div>
+                <div class="flex flex-wrap gap-2 justify-center mb-6">
+                    <button onclick="showMap('main')" class="map-nav-btn bg-sky-600 px-3 py-1.5 rounded-lg text-sm font-bold">Main Map</button>
+                    <button onclick="showMap('luzon')" class="map-nav-btn bg-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold">Luzon</button>
+                    <button onclick="showMap('ncr')" class="map-nav-btn bg-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold">NCR</button>
+                    <button onclick="showMap('car')" class="map-nav-btn bg-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold">CAR</button>
+                    <button onclick="showMap('r1')" class="map-nav-btn bg-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold">Reg I</button>
+                    <button onclick="showMap('r2')" class="map-nav-btn bg-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold">Reg II</button>
+                    <button onclick="showMap('r3')" class="map-nav-btn bg-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold">Reg III</button>
+                    <button onclick="showMap('r4a')" class="map-nav-btn bg-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold">Reg IV-A</button>
+                    <button onclick="showMap('r4b')" class="map-nav-btn bg-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold">Reg IV-B</button>
+                    <button onclick="showMap('r5')" class="map-nav-btn bg-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold">Reg V</button>
+                </div>
+                
+                <div class="text-center mb-4 text-xs font-bold uppercase tracking-widest text-slate-500 border-t border-slate-700 pt-4">Visayas & Mindanao</div>
+                <div class="flex flex-wrap gap-2 justify-center">
+                    <button onclick="showMap('r6')" class="map-nav-btn bg-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold">Reg VI</button>
+                    <button onclick="showMap('r7')" class="map-nav-btn bg-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold">Reg VII</button>
+                    <button onclick="showMap('r8')" class="map-nav-btn bg-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold">Reg VIII</button>
+                    <button onclick="showMap('r9')" class="map-nav-btn bg-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold">Reg IX</button>
+                    <button onclick="showMap('r10')" class="map-nav-btn bg-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold">Reg X</button>
+                    <button onclick="showMap('r11')" class="map-nav-btn bg-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold">Reg XI</button>
+                    <button onclick="showMap('r12')" class="map-nav-btn bg-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold">Reg XII</button>
+                    <button onclick="showMap('r13')" class="map-nav-btn bg-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold">Reg XIII</button>
+                    <button onclick="showMap('barmm')" class="map-nav-btn bg-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold">BARMM</button>
+                    <button onclick="showMap('vismin')" class="map-nav-btn bg-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold">VisMin Overviews</button>
+                </div>
+            </div>
+
+            <div class="glass p-4 rounded-3xl flex justify-center items-center min-h-[500px] map-container">
+                <img id="mapDisplay" src="" alt="Map Reviewer" class="transition-opacity duration-300">
+            </div>
+        </div>
+        
+        <footer class="mt-12 text-center text-slate-500 text-xs pb-8">
+            Designed for Louize • Bulacan State University Mechatronics
+        </footer>
+    </div>
+
+    <script>
+        const regionColors = {
+            "NCR": "#fbbf24", "CAR": "#f87171", "Region I": "#34d399", "Region II": "#60a5fa",
+            "Region III": "#fb923c", "Region IV-A": "#a78bfa", "Region IV-B": "#f472b6",
+            "Region V": "#fbbf24", "Region VI": "#2dd4bf", "Region VII": "#818cf8",
+            "Region VIII": "#fb923c", "Region IX": "#f87171", "Region X": "#34d399",
+            "Region XI": "#60a5fa", "Region XII": "#fbbf24", "Region XIII": "#2dd4bf", "BARMM": "#4ade80"
+        };
+
+        // Updated image links based on the new provided file names
+        const imageMap = {
+            main: "Philippine-Map-Reviewer_page-0001.jpg",
+            luzon: "Philippine-Map-Reviewer_page-0002.jpg",
+            car: "Philippine-Map-Reviewer_page-0003.jpg",
+            ncr: "Philippine-Map-Reviewer_page-0004.jpg",
+            r1: "Philippine-Map-Reviewer_page-0005.jpg",
+            r2: "Philippine-Map-Reviewer_page-0006.jpg",
+            r3: "Philippine-Map-Reviewer_page-0007.jpg",
+            r4a: "Philippine-Map-Reviewer_page-0008.jpg",
+            r4b: "Philippine-Map-Reviewer_page-0009.jpg",
+            r5: "Philippine-Map-Reviewer_page-0010.jpg",
+            r6: "Philippine-Map-Reviewer_page-0011.jpg",
+            r7: "Philippine-Map-Reviewer_page-0012.jpg",
+            r8: "Philippine-Map-Reviewer_page-0013.jpg",
+            r9: "Philippine-Map-Reviewer_page-0014.jpg",
+            r10: "Philippine-Map-Reviewer_page-0015.jpg",
+            r11: "Philippine-Map-Reviewer_page-0016.jpg",
+            r12: "Philippine-Map-Reviewer_page-0017.jpg",
+            r13: "Philippine-Map-Reviewer_page-0018.jpg",
+            barmm: "Philippine-Map-Reviewer_page-0019.jpg",
+            vismin: "Philippine-Map-Reviewer_page-0020.jpg" // Added mapping for additional page
+        };
+
+        const data = {
+            "NCR": { "VALENZUELA": "VALENZUELA", "QUEZON CITY": "QUEZON CITY", "MALABON": "MALABON", "CALOOCAN": "CALOOCAN", "NAVOTAS": "NAVOTAS", "MARIKINA": "MARIKINA", "SAN JUAN": "SAN JUAN", "MANILA": "MANILA", "MANDALUYONG": "MANDALUYONG", "PASIG": "PASIG", "MAKATI": "MAKATI", "PASAY": "PASAY", "PATEROS": "PATEROS", "TAGUIG": "TAGUIG", "PARAÑAQUE": "PARAÑAQUE", "LAS PIÑAS": "LAS PIÑAS", "MUNTINLUPA": "MUNTINLUPA" },
+            "CAR": { "APAYAO": "KABUGAO", "ABRA": "BANGUED", "KALINGA": "TABUK", "BENGUET": "LA TRINIDAD", "MOUNTAIN PROVINCE": "BONTOC", "IFUGAO": "LAGAWE" },
+            "Region I": { "ILOCOS NORTE": "LAOAG", "ILOCOS SUR": "VIGAN", "LA UNION": "SAN FERNANDO", "PANGASINAN": "LINGAYEN" },
+            "Region II": { "BATANES": "BASCO", "CAGAYAN": "TUGUEGARAO", "ISABELA": "ILAGAN", "NUEVA VIZCAYA": "BAYOMBONG", "QUIRINO": "CABARROGUIS" },
+            "Region III": { "AURORA": "BALER", "NUEVA ECIJA": "PALAYAN", "TARLAC": "TARLAC CITY", "ZAMBALES": "IBA", "BATAAN": "BALANGA", "PAMPANGA": "SAN FERNANDO", "BULACAN": "MALOLOS" },
+            "Region IV-A": { "RIZAL": "ANTIPOLO", "CAVITE": "TRECE MARTIRES", "LAGUNA": "SANTA CRUZ", "BATANGAS": "BATANGAS CITY", "QUEZON": "LUCENA" },
+            "Region IV-B": { "OCCIDENTAL MINDORO": "MAMBURAO", "ORIENTAL MINDORO": "CALAPAN", "MARINDUQUE": "BOAC", "ROMBLON": "ROMBLON", "PALAWAN": "PUERTO PRINCESA" },
+            "Region V": { "CAMARINES NORTE": "DAET", "CAMARINES SUR": "PILI", "CATANDUANES": "VIRAC", "ALBAY": "LEGAZPI", "SORSOGON": "SORSOGON CITY", "MASBATE": "MASBATE CITY" },
+            "Region VI": { "AKLAN": "KALIBO", "CAPIZ": "ROXAS CITY", "ILOILO": "ILOILO CITY", "ANTIQUE": "SAN JOSE DE BUENAVISTA", "GUIMARAS": "JORDAN", "NEGROS OCCIDENTAL": "BACOLOD" },
+            "Region VII": { "CEBU": "CEBU CITY", "BOHOL": "TAGBILARAN", "NEGROS ORIENTAL": "DUMAGUETE", "SIQUIJOR": "SIQUIJOR" },
+            "Region VIII": { "NORTHERN SAMAR": "CATARMAN", "EASTERN SAMAR": "BORONGAN", "SAMAR": "CATBALOGAN", "BILIRAN": "NAVAL", "LEYTE": "TACLOBAN", "SOUTHERN LEYTE": "MAASIN" },
+            "Region IX": { "ZAMBOANGA DEL NORTE": "DIPOLOG", "ZAMBOANGA DEL SUR": "PAGADIAN", "ZAMBOANGA SIBUGAY": "IPIL" },
+            "Region X": { "MISAMIS OCCIDENTAL": "OROQUIETA", "MISAMIS ORIENTAL": "CAGAYAN DE ORO", "CAMIGUIN": "MAMBAJAO", "LANAO DEL NORTE": "TUBOD", "BUKIDNON": "MALAYBALAY" },
+            "Region XI": { "DAVAO DEL NORTE": "TAGUM", "DAVAO DEL SUR": "DIGOS", "DAVAO ORIENTAL": "MATI", "DAVAO DE ORO": "NABUNTURAN", "DAVAO OCCIDENTAL": "MALITA" },
+            "Region XII": { "COTABATO": "KIDAPAWAN", "SOUTH COTABATO": "KORONADAL", "SULTAN KUDARAT": "ISULAN", "SARANGANI": "ALABEL" },
+            "Region XIII": { "SURIGAO DEL NORTE": "SURIGAO CITY", "SURIGAO DEL SUR": "TANDAG", "DINAGAT ISLANDS": "SAN JOSE", "AGUSAN DEL NORTE": "CABADBARAN", "AGUSAN DEL SUR": "PROSPERIDAD" },
+            "BARMM": { "LANAO DEL SUR": "MARAWI", "MAGUINDANAO DEL NORTE": "DATU ODIN SINSUAT", "MAGUINDANAO DEL SUR": "BULUAN", "BASILAN": "ISABELA CITY", "SULU": "JOLO", "TAWI-TAWI": "PANGLIMA SUGALA" }
+        };
+
+        let currentMode = 'study';
+        let currentRegion = "Region III";
+        let currentProvince = "";
+        let streak = 0;
+        let bestStreak = 0;
+        let timeLeft = 60;
+        let timerInterval;
+
+        const select = document.getElementById('regionSelect');
+        const provinceEl = document.getElementById('provinceName');
+        const regionLabel = document.getElementById('regionLabel');
+        const input = document.getElementById('answerInput');
+        const feedback = document.getElementById('feedback');
+        const gameCard = document.getElementById('gameCard');
+
+        function updateRegionTheme() {
+            const color = regionColors[currentRegion] || "#38bdf8";
+            document.documentElement.style.setProperty('--region-color', color);
+            if(currentMode === 'study') {
+                document.getElementById('studyBtn').style.backgroundColor = color;
+            } else {
+                document.getElementById('timeBtn').style.backgroundColor = '#f97316';
+            }
+        }
+
+        function switchTab(tab) {
+            document.getElementById('game-section').classList.toggle('hidden', tab !== 'game');
+            document.getElementById('reviewer-section').classList.toggle('hidden', tab !== 'reviewer');
+            document.getElementById('tab-game').classList.toggle('active', tab === 'game');
+            document.getElementById('tab-reviewer').classList.toggle('active', tab === 'reviewer');
+            if(tab === 'reviewer') showMap('main');
+        }
+
+        function showMap(key) {
+            const img = document.getElementById('mapDisplay');
+            img.style.opacity = '0';
+            setTimeout(() => {
+                img.src = imageMap[key];
+                img.style.opacity = '1';
+            }, 200);
+
+            document.querySelectorAll('.map-nav-btn').forEach(btn => {
+                btn.classList.remove('brightness-125', 'ring-2', 'ring-white');
+                btn.classList.add('bg-slate-700');
+            });
+            event.target.classList.remove('bg-slate-700');
+            event.target.classList.add('brightness-125', 'ring-2', 'ring-white');
+        }
+
+        Object.keys(data).forEach(reg => {
+            const opt = document.createElement('option');
+            opt.value = reg;
+            opt.textContent = reg;
+            if(reg === "Region III") opt.selected = true;
+            select.appendChild(opt);
+        });
+
+        select.addEventListener('change', (e) => {
+            currentRegion = e.target.value;
+            updateRegionTheme();
+            nextQuestion();
+        });
+
+        function toggleMode(mode) {
+            currentMode = mode;
+            const color = regionColors[currentRegion];
+            const studyBtn = document.getElementById('studyBtn');
+            const timeBtn = document.getElementById('timeBtn');
+            if(mode === 'study') {
+                studyBtn.className = "w-full py-2 rounded-lg font-semibold transition-all region-bg text-slate-900";
+                studyBtn.style.backgroundColor = color;
+                timeBtn.className = "w-full py-2 rounded-lg font-semibold transition-all bg-slate-700 text-slate-400";
+                timeBtn.style.backgroundColor = '';
+            } else {
+                studyBtn.className = "w-full py-2 rounded-lg font-semibold transition-all bg-slate-700 text-slate-400";
+                studyBtn.style.backgroundColor = '';
+                timeBtn.className = "w-full py-2 rounded-lg font-semibold transition-all bg-orange-600 text-white";
+                timeBtn.style.backgroundColor = '#f97316';
+            }
+            if(mode === 'timeAttack') {
+                document.getElementById('timerContainer').classList.remove('hidden');
+            } else {
+                document.getElementById('timerContainer').classList.add('hidden');
+                clearInterval(timerInterval);
+                document.getElementById('gameOverlay').classList.add('hidden');
+            }
+            startMode();
+        }
+
+        function startMode() {
+            streak = 0;
+            updateUI();
+            document.getElementById('gameOverlay').classList.add('hidden');
+            if(currentMode === 'timeAttack') {
+                timeLeft = 60;
+                document.getElementById('timer').innerText = timeLeft;
+                clearInterval(timerInterval);
+                timerInterval = setInterval(() => {
+                    timeLeft--;
+                    document.getElementById('timer').innerText = timeLeft;
+                    if(timeLeft <= 0) endGame();
+                }, 1000);
+            }
+            nextQuestion();
+        }
+
+        function nextQuestion(keepStreak = true) {
+            if(!keepStreak) streak = 0;
+            updateUI();
+            const provinces = Object.keys(data[currentRegion]);
+            currentProvince = provinces[Math.floor(Math.random() * provinces.length)];
+            regionLabel.innerText = currentRegion;
+            provinceEl.innerText = currentProvince;
+            input.value = "";
+            input.focus();
+            feedback.innerText = "";
+            gameCard.classList.remove('shake', 'correct-flash');
+            updateRegionTheme();
+        }
+
+        function checkAnswer() {
+            const userAns = input.value.trim().toLowerCase();
+            const correctAns = data[currentRegion][currentProvince].toLowerCase();
+            if(userAns === correctAns) {
+                streak++;
+                if(streak > bestStreak) bestStreak = streak;
+                gameCard.classList.add('correct-flash');
+                feedback.innerHTML = `<span class="text-emerald-400">✨ Correct!</span>`;
+                setTimeout(nextQuestion, 800);
+            } else {
+                streak = 0;
+                gameCard.classList.add('shake');
+                setTimeout(() => gameCard.classList.remove('shake'), 400);
+                feedback.innerHTML = `<span class="text-rose-400">Incorrect! It's ${data[currentRegion][currentProvince]}</span>`;
+            }
+            updateUI();
+        }
+
+        function updateUI() {
+            document.getElementById('streak').innerText = streak;
+            document.getElementById('bestStreak').innerText = bestStreak;
+        }
+
+        function endGame() {
+            clearInterval(timerInterval);
+            document.getElementById('gameOverlay').classList.remove('hidden');
+            document.getElementById('finalScore').innerText = `You correctly identified ${streak} capitals!`;
+        }
+
+        input.addEventListener('keydown', (e) => {
+            if(e.key === 'Enter') checkAnswer();
+        });
+
+        updateRegionTheme();
+        nextQuestion();
+    </script>
+</body>
+</html>
